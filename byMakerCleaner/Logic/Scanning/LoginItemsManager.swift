@@ -47,7 +47,7 @@ final class LoginItemsManager: ObservableObject {
     }
 
     // MARK: - Classic Login Items (Apps) via AppleScript
-    private static func fetchClassicLoginItems() -> [LoginItemModel] {
+    private nonisolated static func fetchClassicLoginItems() -> [LoginItemModel] {
         let scriptSource = """
         tell application "System Events"
             set theItems to login items
@@ -127,7 +127,7 @@ final class LoginItemsManager: ObservableObject {
     }
 
     // MARK: - Launch Agents & Daemons
-    private static func fetchLaunchAgents(at path: String, type: LoginItemType) -> [LoginItemModel] {
+    private nonisolated static func fetchLaunchAgents(at path: String, type: LoginItemType) -> [LoginItemModel] {
         let fm = FileManager.default
         guard let files = try? fm.contentsOfDirectory(atPath: path) else { return [] }
         
