@@ -16,9 +16,14 @@ struct LoginItemsView: View {
                         .foregroundColor(.secondary)
                         .padding(.trailing, 8)
                 }
-                Button("Refresh") {
-                    manager.scanAll()
-                }
+                Text("Refresh")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .onTapGesture {
+                        manager.scanAll()
+                    }
             }
             .padding()
             
@@ -60,10 +65,15 @@ struct LoginItemsView: View {
                             HStack {
                                 Text("System Background Services").font(.headline)
                                 Spacer()
-                                Button("Open System Settings") {
-                                    manager.openSystemSettingsLoginItems()
-                                }
-                                .font(.caption)
+                                Text("Open System Settings")
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .onTapGesture {
+                                        manager.openSystemSettingsLoginItems()
+                                    }
                             }
                         ) {
                             ForEach(systemItems) { item in
@@ -102,11 +112,14 @@ struct LoginItemsView: View {
                 ))
                 .controlSize(.small)
                 
-                Button("Remove") {
-                    manager.removeApp(item)
-                }
-                .foregroundColor(.red)
-                .controlSize(.small)
+                Text("Remove")
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .onTapGesture {
+                        manager.removeApp(item)
+                    }
             } else if item.type == .userAgent {
                 Toggle("Enabled", isOn: Binding(
                     get: { item.isEnabled },
