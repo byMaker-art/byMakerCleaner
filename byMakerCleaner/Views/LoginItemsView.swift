@@ -106,11 +106,11 @@ struct LoginItemsView: View {
             Spacer()
             
             if item.type == .app {
-                Toggle("Hide", isOn: Binding(
-                    get: { item.isHidden },
-                    set: { _ in manager.toggleHiddenForApp(item) }
-                ))
-                .controlSize(.small)
+                Text(item.isHidden ? "☑ Hide" : "☐ Hide")
+                    .font(.caption)
+                    .onTapGesture {
+                        manager.toggleHiddenForApp(item)
+                    }
                 
                 Text("Remove")
                     .padding(.horizontal, 8)
@@ -121,11 +121,11 @@ struct LoginItemsView: View {
                         manager.removeApp(item)
                     }
             } else if item.type == .userAgent {
-                Toggle("Enabled", isOn: Binding(
-                    get: { item.isEnabled },
-                    set: { _ in manager.toggleAgentEnabled(item) }
-                ))
-                .controlSize(.small)
+                Text(item.isEnabled ? "☑ Enabled" : "☐ Enabled")
+                    .font(.caption)
+                    .onTapGesture {
+                        manager.toggleAgentEnabled(item)
+                    }
             } else {
                 Text("System / Read-Only")
                     .font(.caption)
