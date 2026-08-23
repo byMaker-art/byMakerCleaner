@@ -54,9 +54,23 @@ actor SystemScanEngine {
             "/tmp",
             "/private/var/tmp",
         ]
+
+        // Files excluded from System Junk scan:
+        // - displaypolicy: display state file — risky to remove on OCLP (legacy GPU) systems
+        // - install.log:   package installation history — small, useful for system diagnostics
+        let excludedPaths = Set([
+            "/private/var/log/displaypolicy",
+            "/private/var/log/install.log",
+        ].map { normalizePath($0) })
+
         var items: [CleanableItem] = []
         for path in paths {
-            items.append(contentsOf: scanDirectory(path: path, category: .systemJunk, maxDepth: 3))
+            items.append(contentsOf: scanDirectory(
+                path: path,
+                category: .systemJunk,
+                maxDepth: 3,
+                excluding: excludedPaths
+            ))
         }
         let totalSize = items.reduce(0) { $0 + $1.size }
         return CategoryResult(category: .systemJunk, items: items, totalSize: totalSize)
