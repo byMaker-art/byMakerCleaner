@@ -54,6 +54,23 @@ struct AppDetailView: View {
                             Spacer()
                         }
                     }
+                    
+                    Divider()
+                    
+                    HStack {
+                        Spacer()
+                        Text("🗑️ Uninstall (\(appState.selectedAppJunkPaths.count + 1) items)")
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8) // Safe enough, hopefully
+                            .onTapGesture {
+                                appState.deleteSelectedApp()
+                            }
+                        Spacer()
+                    }
+                    .padding()
                 }
             } else {
                 Text("Error: No app selected")

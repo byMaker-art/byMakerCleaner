@@ -44,4 +44,26 @@ final class AppState: ObservableObject {
             }
         }
     }
+    
+    func deleteSelectedApp() {
+        guard let app = selectedApp else { return }
+        
+        let fileManager = FileManager.default
+        var allPathsToDelete = selectedAppJunkPaths
+        allPathsToDelete.append(app.path) // Also delete the .app bundle itself
+        
+        for path in allPathsToDelete {
+            do {
+                try fileManager.trashItem(at: path, resultingItemURL: nil)
+            } catch {
+                print("Failed to trash \(path.path): \(error)")
+                // Fallback to direct remove if trash fails (e.g. some network drives or permissions)
+                try? fileManager.removeItem(at: path)
+            }
+        }
+        
+        // After deletion, refresh the list and go back
+        selectApp(nil)
+        loadInstalledApps()
+    }
 }
