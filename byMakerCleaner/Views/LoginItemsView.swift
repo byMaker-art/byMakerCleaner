@@ -105,8 +105,7 @@ struct LoginItemsView: View {
                 Button("Remove") {
                     manager.removeApp(item)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+                .foregroundColor(.red)
                 .controlSize(.small)
             } else if item.type == .userAgent {
                 Toggle("Enabled", isOn: Binding(
