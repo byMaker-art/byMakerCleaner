@@ -51,7 +51,7 @@ struct CategoryRowView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .contentShape(Rectangle())
-            .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }
+            .onTapGesture { isExpanded.toggle() }
 
             // ── Expanded Items ───────────────────────────────────────
             if isExpanded {

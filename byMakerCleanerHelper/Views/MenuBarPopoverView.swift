@@ -90,7 +90,6 @@ struct MenuBarPopoverView: View {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(barColor)
                         .frame(width: geo.size.width * min(max(barValue, 0), 1), height: 5)
-                        .animation(.easeInOut(duration: 0.4), value: barValue)
                 }
             }
             .frame(height: 5)
