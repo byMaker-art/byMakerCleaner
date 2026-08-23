@@ -150,8 +150,12 @@ struct MenuBarPopoverView: View {
     }
 
     private func openMainApp() {
-        // Activate the main app window if it's already running,
-        // otherwise launch it via NSWorkspace.
-        NSApplication.shared.activate(ignoringOtherApps: true)
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.bymaker.byMakerCleaner") {
+            let configuration = NSWorkspace.OpenConfiguration()
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration)
+        } else {
+            // Fallback for development if bundle ID isn't found
+            NSWorkspace.shared.launchApplication("byMakerCleaner")
+        }
     }
 }
