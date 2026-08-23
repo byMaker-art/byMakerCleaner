@@ -17,6 +17,7 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     tabLabel(title: "🧹 Smart Scan", tag: 0)
                     tabLabel(title: "📱 App Uninstaller", tag: 1)
+                    tabLabel(title: "⚙️ Login Items", tag: 2)
                     Spacer()
                 }
                 .background(Color(NSColor.windowBackgroundColor))
@@ -28,9 +29,11 @@ struct ContentView: View {
                     if selectedTab == 0 {
                         CleanerView()
                             .environmentObject(appState)
-                    } else {
+                    } else if selectedTab == 1 {
                         AppListView()
                             .environmentObject(appState)
+                    } else {
+                        LoginItemsView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
