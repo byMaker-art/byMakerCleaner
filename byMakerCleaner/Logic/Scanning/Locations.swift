@@ -26,7 +26,8 @@ class Locations: ObservableObject {
         "Internet Plug-Ins", "LaunchAgents", "LaunchDaemons",
         "Logs", "Preferences", "PreferencePanes",
         "PrivilegedHelperTools", "Saved Application State",
-        "Services", "WebKit", "Extensions", "Frameworks"
+        "Services", "WebKit", "Extensions", "Frameworks",
+        "CrashReporter"
     ]
 
     let cacheDir: String
