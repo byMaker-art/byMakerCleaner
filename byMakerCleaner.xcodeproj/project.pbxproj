@@ -17,18 +17,16 @@
 		7D500DE77C48796072CAB5E0 /* OrphanSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD75389D2CC6AEB51B454D8 /* OrphanSafetyPolicy.swift */; };
 		88C280A0298ECB96AE52A22D /* FileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45B881305B88A488E5C5A2BD /* FileSize.swift */; };
 		8D898BEE397559FC6DC8BAFA /* LanguageFilesScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6453ED353ECFEDA36A7FDE3 /* LanguageFilesScanner.swift */; };
-		8EF9286EDEFE69F6E002C4D9 /* CLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B435EEA8B845A2A130567B /* CLI.swift */; };
 		9427B1E415F158005FEA5766 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE3BE863A3E6DABA3327555 /* Logger.swift */; };
 		B13AF9D3227AE3463706BF8F /* AppListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28D63B6C329EF4839B2D152 /* AppListView.swift */; };
+		CAF9FD047FF88EFA64682D84 /* AppDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5E1CAA46FD6DB9AF2C7B81 /* AppDetailView.swift */; };
 		E59EE8628B637BE2E1CE94D3 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F14558FEC52F440653537B /* AppState.swift */; };
 		E6441128A6A14BC74D2FD516 /* Conditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62ED085F07A23A0217262ACE /* Conditions.swift */; };
-		F084072FA451F64EE5586AD0 /* SimulatorRuntimeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C3A045BC534C53DA467D48 /* SimulatorRuntimeSupport.swift */; };
 		FDA88668D135FCC31C89B03E /* FileProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45D602BB7C31BFFF4AE65A88 /* FileProtection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0FD75389D2CC6AEB51B454D8 /* OrphanSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrphanSafetyPolicy.swift; sourceTree = "<group>"; };
-		29C3A045BC534C53DA467D48 /* SimulatorRuntimeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorRuntimeSupport.swift; sourceTree = "<group>"; };
 		45B881305B88A488E5C5A2BD /* FileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSize.swift; sourceTree = "<group>"; };
 		45D602BB7C31BFFF4AE65A88 /* FileProtection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProtection.swift; sourceTree = "<group>"; };
 		561E60F714EE2FCE7B674D38 /* Locations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locations.swift; sourceTree = "<group>"; };
@@ -38,8 +36,8 @@
 		8BBBACCC33DA5F2DD1B8E572 /* byMakerCleaner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = byMakerCleaner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		968B2D3F995B07E73257A651 /* UniversalBinaryScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalBinaryScanner.swift; sourceTree = "<group>"; };
 		9B1CEE593A9DFD30C1830172 /* StringNormalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringNormalization.swift; sourceTree = "<group>"; };
+		9F5E1CAA46FD6DB9AF2C7B81 /* AppDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailView.swift; sourceTree = "<group>"; };
 		ABE3BE863A3E6DABA3327555 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		C5B435EEA8B845A2A130567B /* CLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLI.swift; sourceTree = "<group>"; };
 		C5F14558FEC52F440653537B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		D6453ED353ECFEDA36A7FDE3 /* LanguageFilesScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageFilesScanner.swift; sourceTree = "<group>"; };
 		DC59DCA95C63225FE4910B18 /* AppPathFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPathFinder.swift; sourceTree = "<group>"; };
@@ -111,6 +109,7 @@
 		D30DB3E1E65D8A6536A64010 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				9F5E1CAA46FD6DB9AF2C7B81 /* AppDetailView.swift */,
 				E28D63B6C329EF4839B2D152 /* AppListView.swift */,
 			);
 			path = Views;
@@ -119,13 +118,11 @@
 		F0B4DEF4A5D764D73F894F85 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				C5B435EEA8B845A2A130567B /* CLI.swift */,
 				45D602BB7C31BFFF4AE65A88 /* FileProtection.swift */,
 				45B881305B88A488E5C5A2BD /* FileSize.swift */,
 				ABE3BE863A3E6DABA3327555 /* Logger.swift */,
 				0FD75389D2CC6AEB51B454D8 /* OrphanSafetyPolicy.swift */,
 				8B1149DEDA96FDE78A8FD599 /* ProviderPaths.swift */,
-				29C3A045BC534C53DA467D48 /* SimulatorRuntimeSupport.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -189,11 +186,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CAF9FD047FF88EFA64682D84 /* AppDetailView.swift in Sources */,
 				776BDFBA90249AF04C82EB3C /* AppInfoFetcher.swift in Sources */,
 				B13AF9D3227AE3463706BF8F /* AppListView.swift in Sources */,
 				28B8C2D479AF65FCCD4A05B8 /* AppPathFinder.swift in Sources */,
 				E59EE8628B637BE2E1CE94D3 /* AppState.swift in Sources */,
-				8EF9286EDEFE69F6E002C4D9 /* CLI.swift in Sources */,
 				E6441128A6A14BC74D2FD516 /* Conditions.swift in Sources */,
 				FDA88668D135FCC31C89B03E /* FileProtection.swift in Sources */,
 				88C280A0298ECB96AE52A22D /* FileSize.swift in Sources */,
@@ -202,7 +199,6 @@
 				9427B1E415F158005FEA5766 /* Logger.swift in Sources */,
 				7D500DE77C48796072CAB5E0 /* OrphanSafetyPolicy.swift in Sources */,
 				4BD97B2E84A71AD38F349100 /* ProviderPaths.swift in Sources */,
-				F084072FA451F64EE5586AD0 /* SimulatorRuntimeSupport.swift in Sources */,
 				6CAF5955EFF2AF277EF1DA24 /* StringNormalization.swift in Sources */,
 				0DB0199927F2DEA9CA34B379 /* UniversalBinaryScanner.swift in Sources */,
 				10C4FEA46E1F6801E8018EB9 /* byMakerCleanerApp.swift in Sources */,
