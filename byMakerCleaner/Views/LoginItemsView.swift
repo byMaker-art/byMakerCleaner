@@ -105,6 +105,15 @@ struct LoginItemsView: View {
             
             Spacer()
             
+            Text("Show in Finder")
+                .font(.caption)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(Color.gray.opacity(0.2))
+                .onTapGesture {
+                    manager.revealInFinder(path: item.path)
+                }
+            
             if item.type == .app {
                 Text(item.isHidden ? "☑ Hide" : "☐ Hide")
                     .font(.caption)

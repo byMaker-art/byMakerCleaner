@@ -187,4 +187,9 @@ final class LoginItemsManager: ObservableObject {
             NSWorkspace.shared.open(url)
         }
     }
+    
+    func revealInFinder(path: String) {
+        let url = URL(fileURLWithPath: path)
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
 }
