@@ -72,7 +72,6 @@ struct LoginItemsView: View {
                         }
                     }
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
             }
         }
         .onAppear {
