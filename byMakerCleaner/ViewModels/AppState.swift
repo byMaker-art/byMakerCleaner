@@ -146,7 +146,9 @@ final class AppState: ObservableObject {
         categoryResults.flatMap { $0.items }.contains { $0.isSelected }
     }
 
-    /// Move selected items to Trash (safe — uses trashItem, never direct delete)
+    /// Clean selected items:
+    /// - trashBins items are already in ~/.Trash → delete them permanently (removeItem)
+    /// - all other items → move to Trash safely (trashItem)
     func cleanSelectedItems() {
         let itemsToClean = categoryResults.flatMap { $0.items }.filter { $0.isSelected && !$0.path.isEmpty }
         guard !itemsToClean.isEmpty else { return }
@@ -158,11 +160,16 @@ final class AppState: ObservableObject {
             let fm = FileManager.default
             for item in itemsToClean {
                 let url = URL(fileURLWithPath: item.path)
-                do {
-                    try fm.trashItem(at: url, resultingItemURL: nil)
-                } catch {
-                    // Fallback: direct removal (e.g. /tmp items that can't go to Trash)
+                if item.category == .trashBins {
+                    // Items inside ~/.Trash are already in Trash — delete permanently
                     try? fm.removeItem(at: url)
+                } else {
+                    do {
+                        try fm.trashItem(at: url, resultingItemURL: nil)
+                    } catch {
+                        // Fallback: direct removal (e.g. /private/var/tmp items)
+                        try? fm.removeItem(at: url)
+                    }
                 }
             }
             await MainActor.run {
