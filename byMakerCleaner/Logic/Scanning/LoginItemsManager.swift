@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import OSLog
+import AppKit
 
 enum LoginItemType: String, Equatable {
     case app = "App"
@@ -33,10 +34,10 @@ final class LoginItemsManager: ObservableObject {
         Task {
             let fetchedItems = await Task.detached(priority: .userInitiated) {
                 var results: [LoginItemModel] = []
-                results.append(contentsOf: self.fetchClassicLoginItems())
-                results.append(contentsOf: self.fetchLaunchAgents(at: "\(NSHomeDirectory())/Library/LaunchAgents", type: .userAgent))
-                results.append(contentsOf: self.fetchLaunchAgents(at: "/Library/LaunchAgents", type: .systemAgent))
-                results.append(contentsOf: self.fetchLaunchAgents(at: "/Library/LaunchDaemons", type: .systemDaemon))
+                results.append(contentsOf: Self.fetchClassicLoginItems())
+                results.append(contentsOf: Self.fetchLaunchAgents(at: "\(NSHomeDirectory())/Library/LaunchAgents", type: .userAgent))
+                results.append(contentsOf: Self.fetchLaunchAgents(at: "/Library/LaunchAgents", type: .systemAgent))
+                results.append(contentsOf: Self.fetchLaunchAgents(at: "/Library/LaunchDaemons", type: .systemDaemon))
                 return results
             }.value
             
@@ -46,7 +47,7 @@ final class LoginItemsManager: ObservableObject {
     }
 
     // MARK: - Classic Login Items (Apps) via AppleScript
-    private func fetchClassicLoginItems() -> [LoginItemModel] {
+    private static func fetchClassicLoginItems() -> [LoginItemModel] {
         let scriptSource = """
         tell application "System Events"
             set theItems to login items
@@ -60,11 +61,10 @@ final class LoginItemsManager: ObservableObject {
         """
         
         var error: NSDictionary?
-        guard let script = NSAppleScript(source: scriptSource),
-              let descriptor = script.executeAndReturnError(&error) else {
-            print("AppleScript error: \(String(describing: error))")
+        guard let script = NSAppleScript(source: scriptSource) else {
             return []
         }
+        let descriptor = script.executeAndReturnError(&error)
         
         var results: [LoginItemModel] = []
         let count = descriptor.numberOfItems
@@ -127,7 +127,7 @@ final class LoginItemsManager: ObservableObject {
     }
 
     // MARK: - Launch Agents & Daemons
-    private func fetchLaunchAgents(at path: String, type: LoginItemType) -> [LoginItemModel] {
+    private static func fetchLaunchAgents(at path: String, type: LoginItemType) -> [LoginItemModel] {
         let fm = FileManager.default
         guard let files = try? fm.contentsOfDirectory(atPath: path) else { return [] }
         
