@@ -11,9 +11,11 @@
 		0DC98A7829BBBA594977E172 /* MenuBarPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C5A283DB22F6742200DD0B /* MenuBarPopoverView.swift */; };
 		1035624F0B26CCFD3A4A83E4 /* Locations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561E60F714EE2FCE7B674D38 /* Locations.swift */; };
 		10C4FEA46E1F6801E8018EB9 /* byMakerCleanerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4D9F2880F83BF4B3A03E13 /* byMakerCleanerApp.swift */; };
+		25BF7C1303239717FA1C7BE9 /* LoginItemsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796CE09375CF4B939FB1E0BE /* LoginItemsManager.swift */; };
 		28B8C2D479AF65FCCD4A05B8 /* AppPathFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC59DCA95C63225FE4910B18 /* AppPathFinder.swift */; };
 		40AC0FD5EC6B61B99C5EE710 /* SystemMetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3F9C7300691502232E58694 /* SystemMetricsService.swift */; };
 		4BD97B2E84A71AD38F349100 /* ProviderPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1149DEDA96FDE78A8FD599 /* ProviderPaths.swift */; };
+		4F5BBF835EEF2FC64EC63659 /* LoginItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6766EFEF538F9DABCECD4BD6 /* LoginItemsView.swift */; };
 		56AEE902334C77774F639141 /* CleanerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 746B4DC80823540CF41734D7 /* CleanerView.swift */; };
 		574D0D6A505673DCAF56BB55 /* byMakerCleanerHelperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847957EF189F4B480259ABDB /* byMakerCleanerHelperApp.swift */; };
 		6190259A4343DD0DC7C9216F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D290700C62C70EBBCFB9DC59 /* ContentView.swift */; };
@@ -41,7 +43,9 @@
 		561E60F714EE2FCE7B674D38 /* Locations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Locations.swift; sourceTree = "<group>"; };
 		62ED085F07A23A0217262ACE /* Conditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conditions.swift; sourceTree = "<group>"; };
 		6626D09CCAE7A8F08430D909 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6766EFEF538F9DABCECD4BD6 /* LoginItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemsView.swift; sourceTree = "<group>"; };
 		746B4DC80823540CF41734D7 /* CleanerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanerView.swift; sourceTree = "<group>"; };
+		796CE09375CF4B939FB1E0BE /* LoginItemsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemsManager.swift; sourceTree = "<group>"; };
 		847957EF189F4B480259ABDB /* byMakerCleanerHelperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = byMakerCleanerHelperApp.swift; sourceTree = "<group>"; };
 		88C226FEFCE99C03CCB1F11B /* AppInfoFetcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInfoFetcher.swift; sourceTree = "<group>"; };
 		8B1149DEDA96FDE78A8FD599 /* ProviderPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPaths.swift; sourceTree = "<group>"; };
@@ -129,6 +133,7 @@
 				62ED085F07A23A0217262ACE /* Conditions.swift */,
 				D6453ED353ECFEDA36A7FDE3 /* LanguageFilesScanner.swift */,
 				561E60F714EE2FCE7B674D38 /* Locations.swift */,
+				796CE09375CF4B939FB1E0BE /* LoginItemsManager.swift */,
 				9B1CEE593A9DFD30C1830172 /* StringNormalization.swift */,
 				D10C83544B8304336EC230C1 /* SystemScanEngine.swift */,
 				968B2D3F995B07E73257A651 /* UniversalBinaryScanner.swift */,
@@ -144,6 +149,7 @@
 				C4C0146E043DB3BA2A5CCCC3 /* CategoryRowView.swift */,
 				746B4DC80823540CF41734D7 /* CleanerView.swift */,
 				D290700C62C70EBBCFB9DC59 /* ContentView.swift */,
+				6766EFEF538F9DABCECD4BD6 /* LoginItemsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -293,6 +299,8 @@
 				8D898BEE397559FC6DC8BAFA /* LanguageFilesScanner.swift in Sources */,
 				1035624F0B26CCFD3A4A83E4 /* Locations.swift in Sources */,
 				9427B1E415F158005FEA5766 /* Logger.swift in Sources */,
+				25BF7C1303239717FA1C7BE9 /* LoginItemsManager.swift in Sources */,
+				4F5BBF835EEF2FC64EC63659 /* LoginItemsView.swift in Sources */,
 				7D500DE77C48796072CAB5E0 /* OrphanSafetyPolicy.swift in Sources */,
 				4BD97B2E84A71AD38F349100 /* ProviderPaths.swift in Sources */,
 				6CAF5955EFF2AF277EF1DA24 /* StringNormalization.swift in Sources */,
