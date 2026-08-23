@@ -176,16 +176,16 @@ final class SystemMetricsService: ObservableObject {
 
         var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddr
         while let addr = cursor {
-            let name = String(cString: addr.ifa_name)
+            let name = String(cString: addr.pointee.ifa_name)
             // Only count real interfaces: en (Ethernet/Wi-Fi), utun (VPN), awdl, bridge
             let isReal = name.hasPrefix("en") || name.hasPrefix("utun") || name.hasPrefix("bridge")
-            if isReal, addr.ifa_addr?.pointee.sa_family == UInt8(AF_LINK) {
-                if let data = addr.ifa_data?.assumingMemoryBound(to: if_data.self) {
+            if isReal, addr.pointee.ifa_addr?.pointee.sa_family == UInt8(AF_LINK) {
+                if let data = addr.pointee.ifa_data?.assumingMemoryBound(to: if_data.self) {
                     totalUp   += Int64(data.pointee.ifi_obytes)
                     totalDown += Int64(data.pointee.ifi_ibytes)
                 }
             }
-            cursor = addr.ifa_next
+            cursor = addr.pointee.ifa_next
         }
 
         let now = Date()
