@@ -11,8 +11,9 @@ struct LoginItemsView: View {
                     .font(.title2).bold()
                 Spacer()
                 if manager.isScanning {
-                    ProgressView()
-                        .controlSize(.small)
+                    Text("Scanning...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                         .padding(.trailing, 8)
                 }
                 Button("Refresh") {
@@ -100,7 +101,6 @@ struct LoginItemsView: View {
                     get: { item.isHidden },
                     set: { _ in manager.toggleHiddenForApp(item) }
                 ))
-                .toggleStyle(.switch)
                 .controlSize(.small)
                 
                 Button("Remove") {
@@ -114,7 +114,6 @@ struct LoginItemsView: View {
                     get: { item.isEnabled },
                     set: { _ in manager.toggleAgentEnabled(item) }
                 ))
-                .toggleStyle(.switch)
                 .controlSize(.small)
             } else {
                 Text("System / Read-Only")
