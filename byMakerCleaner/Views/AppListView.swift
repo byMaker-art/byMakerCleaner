@@ -17,10 +17,15 @@ struct AppListView: View {
                         .foregroundColor(.secondary)
                         .padding()
                 } else {
-                    Button("Rescan") {
-                        appState.loadInstalledApps()
-                    }
-                    .padding()
+                    Text("Rescan")
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .onTapGesture {
+                            appState.loadInstalledApps()
+                        }
+                        .padding()
                 }
             }
             
