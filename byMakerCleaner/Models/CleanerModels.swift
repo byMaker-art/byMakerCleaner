@@ -109,5 +109,8 @@ enum ScanState: Equatable {
     case scanning(currentPath: String)
     case done
     case cleaning
-    case cleanDone(freedBytes: Int64)
+    /// freedBytes — total size cleaned.
+    /// hasTrashItems — true if any Trash Bins items were permanently deleted
+    ///   (so Done screen doesn't say "moved to Trash" for items already in Trash).
+    case cleanDone(freedBytes: Int64, hasTrashItems: Bool)
 }

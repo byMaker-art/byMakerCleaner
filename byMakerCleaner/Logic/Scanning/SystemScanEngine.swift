@@ -113,14 +113,43 @@ actor SystemScanEngine {
     }
 
     private func scanTrash() -> CategoryResult {
-        let items = scanDirectory(
+        var items: [CleanableItem] = []
+
+        // 1) Main user trash
+        items.append(contentsOf: scanDirectory(
             path: "\(home)/.Trash",
             category: .trashBins,
             maxDepth: 1
-        )
-        let totalSize = items.reduce(0) { $0 + $1.size }
-        return CategoryResult(category: .trashBins, items: items, totalSize: totalSize)
+        ))
+
+        // 2) Trash on every mounted volume (e.g. external drives, APFS containers)
+        // Each volume has a .Trashes/<uid>/ folder that Finder also shows.
+        let uid = getuid()
+        let volumeURLs = fileManager.mountedVolumeURLs(
+            includingResourceValuesForKeys: [.volumeIsLocalKey],
+            options: [.skipHiddenVolumes]
+        ) ?? []
+
+        for volumeURL in volumeURLs {
+            // Skip the root volume — already covered by ~/.Trash above
+            if volumeURL.path == "/" { continue }
+            // Only local (non-network) volumes
+            if let values = try? volumeURL.resourceValues(forKeys: [.volumeIsLocalKey]),
+               values.volumeIsLocal == false { continue }
+
+            let trashPath = volumeURL.appendingPathComponent(".Trashes/\(uid)").path
+            items.append(contentsOf: scanDirectory(
+                path: trashPath,
+                category: .trashBins,
+                maxDepth: 1
+            ))
+        }
+
+        let unique = deduplicated(items)
+        let totalSize = unique.reduce(0) { $0 + $1.size }
+        return CategoryResult(category: .trashBins, items: unique, totalSize: totalSize)
     }
+
 
     private func scanAIApps() -> CategoryResult {
         struct Target { let name: String; let path: String; let selected: Bool }

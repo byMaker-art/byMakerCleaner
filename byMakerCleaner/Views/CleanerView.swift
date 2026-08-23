@@ -25,8 +25,8 @@ struct CleanerView: View {
                 resultsView
             case .cleaning:
                 cleaningView
-            case .cleanDone(let freed):
-                cleanDoneView(freed: freed)
+            case .cleanDone(let freed, let hasTrashItems):
+                cleanDoneView(freed: freed, hasTrashItems: hasTrashItems)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -189,17 +189,31 @@ struct CleanerView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func cleanDoneView(freed: Int64) -> some View {
+    private func cleanDoneView(freed: Int64, hasTrashItems: Bool) -> some View {
         let formattedFreed = ByteCountFormatter.string(fromByteCount: freed, countStyle: .file)
+
+        // Message depends on what was cleaned:
+        // - Trash Bins items were permanently deleted (not "moved to Trash")
+        // - Regular items were moved to Trash (recoverable)
+        let mainMessage: String
+        let subMessage: String
+        if hasTrashItems {
+            mainMessage = "**\(formattedFreed)** freed"
+            subMessage = "Trash Bins items were permanently deleted. Other items moved to Trash."
+        } else {
+            mainMessage = "**\(formattedFreed)** moved to Trash"
+            subMessage = "Items are in your Trash — you can empty it or restore them from there."
+        }
+
         return VStack(spacing: 20) {
             Spacer()
             Text("✅")
                 .font(.system(size: 64))
             Text("Done!")
                 .font(.title2).bold()
-            Text("**\(formattedFreed)** moved to Trash")
+            Text(LocalizedStringKey(mainMessage))
                 .font(.title3)
-            Text("Items are in your Trash — you can empty it or restore them from there.")
+            Text(subMessage)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 40)

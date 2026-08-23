@@ -155,6 +155,7 @@ final class AppState: ObservableObject {
 
         scanState = .cleaning
         let totalBytes = itemsToClean.reduce(0) { $0 + $1.size }
+        let hasTrashItems = itemsToClean.contains { $0.category == .trashBins }
 
         Task.detached(priority: .userInitiated) {
             let fm = FileManager.default
@@ -174,7 +175,7 @@ final class AppState: ObservableObject {
             }
             await MainActor.run {
                 self.categoryResults = []
-                self.scanState = .cleanDone(freedBytes: totalBytes)
+                self.scanState = .cleanDone(freedBytes: totalBytes, hasTrashItems: hasTrashItems)
             }
         }
     }
