@@ -6,8 +6,13 @@ struct byMakerCleanerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            AppListView()
-                .environmentObject(appState)
+            if appState.selectedApp != nil {
+                AppDetailView()
+                    .environmentObject(appState)
+            } else {
+                AppListView()
+                    .environmentObject(appState)
+            }
         }
     }
 }

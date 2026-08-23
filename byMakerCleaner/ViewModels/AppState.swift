@@ -6,6 +6,10 @@ final class AppState: ObservableObject {
     @Published var installedApps: [InstalledApp] = []
     @Published var isLoadingApps: Bool = false
     
+    @Published var selectedApp: InstalledApp? = nil
+    @Published var selectedAppJunkPaths: [URL] = []
+    @Published var isScanningJunk: Bool = false
+    
     init() {}
     
     func loadInstalledApps() {
@@ -21,6 +25,23 @@ final class AppState: ObservableObject {
             // Update the UI on the MainActor
             self.installedApps = apps.sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
             self.isLoadingApps = false
+        }
+    }
+    
+    func selectApp(_ app: InstalledApp?) {
+        self.selectedApp = app
+        self.selectedAppJunkPaths = []
+        
+        if let app = app {
+            isScanningJunk = true
+            Task {
+                let paths = await Task.detached(priority: .userInitiated) {
+                    AppPathFinder.find(for: app)
+                }.value
+                
+                self.selectedAppJunkPaths = paths
+                self.isScanningJunk = false
+            }
         }
     }
 }

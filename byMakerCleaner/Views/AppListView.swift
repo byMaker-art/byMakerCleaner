@@ -59,6 +59,10 @@ struct AppListView: View {
                             .monospacedDigit()
                     }
                     .padding(.vertical, 4)
+                    .contentShape(Rectangle()) // Ensures the whole row is clickable
+                    .onTapGesture {
+                        appState.selectApp(app)
+                    }
                 }
             }
         }
