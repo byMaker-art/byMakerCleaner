@@ -31,13 +31,13 @@ class AppPathFinder {
 
     // MARK: - Properties
 
-    private let appInfo: AppInfo
+    private let appInfo: InstalledApp
     private let locations: Locations
     private let sensitivity: Sensitivity
     private var collectionSet: Set<URL> = []
     private let collectionQueue = DispatchQueue(label: "com.bymakercleaner.pathfinder.collection")
 
-    // Pre-computed cached identifiers (computed once in init, used in hot loop)
+    // Pre-computed cached identifiers
     private let normalizedBundleID: String
     private let bundleLastTwo: String
     private let normalizedAppName: String
@@ -51,7 +51,12 @@ class AppPathFinder {
 
     // MARK: - Initialization
 
-    init(appInfo: AppInfo, locations: Locations, sensitivity: Sensitivity = .enhanced) {
+    /// Initializes a new path finder for the given application.
+    /// - Parameters:
+    ///   - appInfo: Basic information about the target application.
+    ///   - locations: The system and user locations to scan.
+    ///   - sensitivity: The heuristic strictness (determines fallback strategies).
+    init(appInfo: InstalledApp, locations: Locations, sensitivity: Sensitivity = .enhanced) {
         self.appInfo = appInfo
         self.locations = locations
         self.sensitivity = sensitivity

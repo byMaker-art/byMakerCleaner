@@ -8,7 +8,8 @@ struct InstalledApp: Identifiable, Hashable {
     let path: URL
     let icon: NSImage
     let size: Int64
-
+    let entitlements: [String]?
+    let teamIdentifier: String?
     var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
@@ -128,7 +129,9 @@ final class AppInfoFetcher {
             bundleIdentifier: bundleID,
             path: url,
             icon: icon,
-            size: size
+            size: size,
+            entitlements: nil,
+            teamIdentifier: nil
         )
     }
 

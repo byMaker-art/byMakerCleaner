@@ -36,10 +36,10 @@ final class AppState: ObservableObject {
             isScanningJunk = true
             Task {
                 let paths = await Task.detached(priority: .userInitiated) {
-                    AppPathFinder.find(for: app)
+                    AppPathFinder(appInfo: app, locations: Locations()).findPaths()
                 }.value
                 
-                self.selectedAppJunkPaths = paths
+                self.selectedAppJunkPaths = Array(paths).sorted(by: { $0.path < $1.path })
                 self.isScanningJunk = false
             }
         }
