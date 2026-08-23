@@ -115,11 +115,13 @@ actor SystemScanEngine {
     private func scanTrash() -> CategoryResult {
         var items: [CleanableItem] = []
 
-        // 1) Main user trash
+        // 1) Main user trash — minimumSize:0 so even tiny files (aliases, .DS_Store)
+        // are shown; Finder counts them and shows the Trash as non-empty.
         items.append(contentsOf: scanDirectory(
             path: "\(home)/.Trash",
             category: .trashBins,
-            maxDepth: 1
+            maxDepth: 1,
+            minimumSize: 0
         ))
 
         // 2) Trash on every mounted volume (e.g. external drives, APFS containers)
@@ -141,7 +143,8 @@ actor SystemScanEngine {
             items.append(contentsOf: scanDirectory(
                 path: trashPath,
                 category: .trashBins,
-                maxDepth: 1
+                maxDepth: 1,
+                minimumSize: 0
             ))
         }
 
@@ -348,6 +351,7 @@ actor SystemScanEngine {
         category: CleaningCategory,
         maxDepth: Int,
         isSelected: Bool = true,
+        minimumSize: Int64 = 1024,
         excluding excludedPaths: Set<String> = []
     ) -> [CleanableItem] {
         var items: [CleanableItem] = []
@@ -377,7 +381,7 @@ actor SystemScanEngine {
 
                 if isDir.boolValue {
                     let size = directorySize(path: fullPath)
-                    if size > 1024 {
+                    if size > minimumSize {
                         items.append(CleanableItem(
                             name: name,
                             path: fullPath,
@@ -389,7 +393,7 @@ actor SystemScanEngine {
                     }
                 } else {
                     if let attrs = try? fileManager.attributesOfItem(atPath: fullPath),
-                       let size = attrs[.size] as? Int64, size > 1024 {
+                       let size = attrs[.size] as? Int64, size >= minimumSize {
                         items.append(CleanableItem(
                             name: name,
                             path: fullPath,
