@@ -25,14 +25,8 @@ enum LogLevel: String, Sendable, CaseIterable {
     }
 }
 
-@MainActor
-final class Logger: ObservableObject {
-
-    nonisolated(unsafe) static let shared = Logger()
-
-    @Published private(set) var entries: [LogEntry] = []
-
-    private static let maxEntries = 1000
+final class Logger: @unchecked Sendable {
+    static let shared = Logger()
 
     private let osLogger: os.Logger
 
@@ -41,19 +35,7 @@ final class Logger: ObservableObject {
         self.osLogger = os.Logger(subsystem: subsystem, category: "general")
     }
 
-    nonisolated func log(_ message: String, level: LogLevel = .info, source: String = #function) {
+    func log(_ message: String, level: LogLevel = .info, source: String = #function) {
         osLogger.log(level: level.osLogType, "\(message, privacy: .public)")
-
-        let entry = LogEntry(message: message, level: level, source: source)
-        Task { @MainActor [weak self] in
-            self?.append(entry)
-        }
-    }
-
-    private func append(_ entry: LogEntry) {
-        entries.append(entry)
-        if entries.count > Self.maxEntries {
-            entries.removeFirst(entries.count - Self.maxEntries)
-        }
     }
 }
