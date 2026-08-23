@@ -68,14 +68,16 @@ final class LoginItemsManager: ObservableObject {
         
         var results: [LoginItemModel] = []
         let count = descriptor.numberOfItems
-        for i in 1...count {
-            if let itemString = descriptor.atIndex(i)?.stringValue {
-                let parts = itemString.components(separatedBy: "|||")
-                if parts.count >= 3 {
-                    let name = parts[0]
-                    let hidden = parts[1] == "true"
-                    let path = parts[2]
-                    results.append(LoginItemModel(name: name, path: path, type: .app, isEnabled: true, isHidden: hidden))
+        if count >= 1 {
+            for i in 1...count {
+                if let itemString = descriptor.atIndex(i)?.stringValue {
+                    let parts = itemString.components(separatedBy: "|||")
+                    if parts.count >= 3 {
+                        let name = parts[0]
+                        let hidden = parts[1] == "true"
+                        let path = parts[2]
+                        results.append(LoginItemModel(name: name, path: path, type: .app, isEnabled: true, isHidden: hidden))
+                    }
                 }
             }
         }
