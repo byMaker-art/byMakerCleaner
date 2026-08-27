@@ -18,6 +18,7 @@ struct ContentView: View {
                     tabLabel(title: "🧹 Smart Scan", tag: 0)
                     tabLabel(title: "📱 App Uninstaller", tag: 1)
                     tabLabel(title: "⚙️ Login Items", tag: 2)
+                    tabLabel(title: "🔍 Orphan Finder", tag: 3)
                     Spacer()
                 }
                 .background(Color(NSColor.windowBackgroundColor))
@@ -32,8 +33,10 @@ struct ContentView: View {
                     } else if selectedTab == 1 {
                         AppListView()
                             .environmentObject(appState)
-                    } else {
+                    } else if selectedTab == 2 {
                         LoginItemsView()
+                    } else {
+                        OrphanFinderView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

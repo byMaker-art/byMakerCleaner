@@ -2,8 +2,10 @@ import SwiftUI
 
 /// Compact popover shown when user clicks the menu bar icon.
 /// All interactions via Text + .onTapGesture (GPU-safe, no Button).
+/// Note: Settings button now works natively (same process as main app).
 struct MenuBarPopoverView: View {
     @EnvironmentObject var metricsService: SystemMetricsService
+    @Environment(\.openWindow) private var openWindow
 
     private var m: SystemMetrics { metricsService.metrics }
 
@@ -127,15 +129,25 @@ struct MenuBarPopoverView: View {
 
     private var footerRow: some View {
         HStack(spacing: 12) {
-            Text("Open byMaker Cleaner")
+            Text("Open App")
                 .font(.caption)
                 .foregroundColor(.accentColor)
-                .onTapGesture { openMainApp() }
-            Text("⚙ Settings")
-                .font(.caption)
-                .foregroundColor(.accentColor)
-                .onTapGesture { openSettings() }
+                .onTapGesture { openMainWindow() }
+
+            // Settings button — macOS 14+: use environment; macOS 13: use selector
+            if #available(macOS 14, *) {
+                SettingsOpenerLabel()
+            } else {
+                Text("⚙ Settings")
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+                    .onTapGesture {
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    }
+            }
+
             Spacer()
+
             Text("Quit")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -143,7 +155,7 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Actions
 
     private func barColor(for value: Double) -> Color {
         switch value {
@@ -153,30 +165,26 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    private func openMainApp() {
-        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.bymaker.byMakerCleaner") {
-            let configuration = NSWorkspace.OpenConfiguration()
-            NSWorkspace.shared.openApplication(at: url, configuration: configuration)
-        } else {
-            NSWorkspace.shared.launchApplication("byMakerCleaner")
-        }
-    }
-
-    /// Open the main app and tell it to show the Settings window.
-    /// Uses a custom URL scheme deep-link: bymakercleaner://settings
-    private func openSettings() {
-        // First activate the main app, then open its Preferences window.
-        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.bymaker.byMakerCleaner") {
-            let config = NSWorkspace.OpenConfiguration()
-            config.activates = true
-            NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in
-                // After launch, send the open-settings URL
-                if let settingsURL = URL(string: "bymakercleaner://settings") {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        NSWorkspace.shared.open(settingsURL)
-                    }
-                }
-            }
-        }
+    /// Bring the main ContentView window to front or open it if it was closed.
+    private func openMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        openWindow(id: "main")
     }
 }
+
+// MARK: - Settings Opener (macOS 14+)
+
+/// Separate view so @Environment(\.openSettings) can be declared in a View body.
+/// This avoids the "Please use SettingsLink" runtime error on macOS 14+.
+@available(macOS 14.0, *)
+private struct SettingsOpenerLabel: View {
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Text("⚙ Settings")
+            .font(.caption)
+            .foregroundColor(.accentColor)
+            .onTapGesture { openSettings() }
+    }
+}
+
