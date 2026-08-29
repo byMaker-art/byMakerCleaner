@@ -25,6 +25,29 @@ final class LoginItemsManager: ObservableObject {
     @Published var items: [LoginItemModel] = []
     @Published var isScanning = false
 
+    enum SortOrder: String, CaseIterable {
+        case name = "Name"
+        case status = "Status"
+    }
+    @Published var sortOrder: SortOrder = .name
+
+    func sortedItems(for types: [LoginItemType]) -> [LoginItemModel] {
+        let filtered = items.filter { types.contains($0.type) }
+        switch sortOrder {
+        case .name:
+            return filtered.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .status:
+            return filtered.sorted {
+                let s1 = ($0.type == .app) ? $0.isHidden : $0.isEnabled
+                let s2 = ($1.type == .app) ? $1.isHidden : $1.isEnabled
+                if s1 == s2 {
+                    return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                }
+                return s1 && !s2
+            }
+        }
+    }
+
     init() {}
 
     func scanAll() {

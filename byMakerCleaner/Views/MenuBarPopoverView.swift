@@ -174,17 +174,17 @@ struct MenuBarPopoverView: View {
 
 // MARK: - Settings Opener (macOS 14+)
 
-/// Separate view so @Environment(\.openSettings) can be declared in a View body.
+/// Separate view so SettingsLink can be used.
 /// This avoids the "Please use SettingsLink" runtime error on macOS 14+.
 @available(macOS 14.0, *)
 private struct SettingsOpenerLabel: View {
-    @Environment(\.openSettings) private var openSettings
-
     var body: some View {
-        Text("⚙ Settings")
-            .font(.caption)
-            .foregroundColor(.accentColor)
-            .onTapGesture { openSettings() }
+        SettingsLink {
+            Text("⚙ Settings")
+                .font(.caption)
+                .foregroundColor(.accentColor)
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -118,6 +118,7 @@ actor OrphanFinderEngine {
         "nsattributedstringagent",
         // Generic infra noise
         "tmp", "temp", "cache", "caches", "logs", "run", "lock",
+        "windowserver", "intervals", "typescript", "pip", "sentrycrash"
     ]
 
     // MARK: - Public API
@@ -185,6 +186,9 @@ actor OrphanFinderEngine {
                     if let parent = parentBundleID(baseBundleID),
                        workspace.urlForApplication(withBundleIdentifier: parent) != nil { continue }
 
+                    // Check skipReverse
+                    if skipReverse.contains(where: { baseBundleID.contains($0) }) { continue }
+
                     // Still here → app is gone → orphan
                     if let orphan = makeOrphan(url: url, matchedBundleID: baseBundleID) {
                         result.files.append(orphan)
@@ -198,6 +202,9 @@ actor OrphanFinderEngine {
                     if Self.systemCacheAllowlist.contains(key) { continue }
                     // Also check partial prefix match (e.g. "geoservices" contains "geo")
                     if Self.systemCacheAllowlist.contains(where: { key.hasPrefix($0) || $0.hasPrefix(key) }) { continue }
+
+                    // Check skipReverse
+                    if skipReverse.contains(where: { key.hasPrefix($0) || $0.hasPrefix(key) }) { continue }
 
                     // Check if any installed app name matches (case-insensitive)
                     // We compare against bundle ID components as well

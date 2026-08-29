@@ -13,6 +13,21 @@ final class AppState: ObservableObject {
     @Published var selectedAppJunkPaths: [URL] = []
     @Published var isScanningJunk: Bool = false
 
+    enum AppSortOrder: String, CaseIterable {
+        case name = "Name"
+        case size = "Size"
+    }
+    @Published var appSortOrder: AppSortOrder = .name
+
+    var sortedInstalledApps: [InstalledApp] {
+        switch appSortOrder {
+        case .name:
+            return installedApps.sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
+        case .size:
+            return installedApps.sorted { $0.size > $1.size }
+        }
+    }
+
     // MARK: - System Cleaner state
 
     @Published var scanState: ScanState = .idle
@@ -34,7 +49,7 @@ final class AppState: ObservableObject {
             let apps = await Task.detached(priority: .userInitiated) {
                 AppInfoFetcher.shared.fetchInstalledApps()
             }.value
-            self.installedApps = apps.sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
+            self.installedApps = apps
             self.isLoadingApps = false
         }
     }

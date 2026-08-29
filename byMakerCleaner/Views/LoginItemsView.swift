@@ -71,46 +71,75 @@ struct LoginItemsView: View {
     // MARK: - Item list
 
     private var itemList: some View {
-        List {
-            // ── Apps (Open at Login) ───────────────────────────────────
-            let apps = manager.items.filter { $0.type == .app }
-            if !apps.isEmpty {
-                sectionHeader(title: "🚀 Apps (Open at Login)", count: apps.count)
-                ForEach(apps) { item in
-                    itemRow(for: item)
-                        .listRowSeparator(.visible)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                }
-            }
+        VStack(spacing: 0) {
+            // ── Toolbar ─────────────────────────────────────────────────
+            HStack(spacing: 0) {
+                Spacer()
 
-            // ── User LaunchAgents ──────────────────────────────────────
-            let userAgents = manager.items.filter { $0.type == .userAgent }
-            if !userAgents.isEmpty {
-                sectionHeader(title: "🔧 User Background Services", count: userAgents.count)
-                ForEach(userAgents) { item in
-                    itemRow(for: item)
-                        .listRowSeparator(.visible)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                }
-            }
+                Text("Sort:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.trailing, 4)
 
-            // ── System Daemons / Agents ────────────────────────────────
-            let systemItems = manager.items.filter { $0.type == .systemAgent || $0.type == .systemDaemon }
-            if !systemItems.isEmpty {
-                sectionHeaderWithAction(
-                    title: "🔒 System Background Services",
-                    count: systemItems.count,
-                    action: { manager.openSystemSettingsLoginItems() },
-                    actionLabel: "Open System Settings"
-                )
-                ForEach(systemItems) { item in
-                    itemRow(for: item)
-                        .listRowSeparator(.visible)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                ForEach(LoginItemsManager.SortOrder.allCases, id: \.self) { order in
+                    let isActive = manager.sortOrder == order
+                    Text(order.rawValue)
+                        .font(.caption)
+                        .fontWeight(isActive ? .bold : .regular)
+                        .foregroundColor(isActive ? .accentColor : .secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(isActive ? Color.accentColor.opacity(0.12) : Color.clear)
+                        .onTapGesture { manager.sortOrder = order }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(Color(NSColor.windowBackgroundColor))
+
+            Divider()
+
+            List {
+                // ── Apps (Open at Login) ───────────────────────────────────
+                let apps = manager.sortedItems(for: [.app])
+                if !apps.isEmpty {
+                    sectionHeader(title: "🚀 Apps (Open at Login)", count: apps.count)
+                    ForEach(apps) { item in
+                        itemRow(for: item)
+                            .listRowSeparator(.visible)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
+                }
+
+                // ── User LaunchAgents ──────────────────────────────────────
+                let userAgents = manager.sortedItems(for: [.userAgent])
+                if !userAgents.isEmpty {
+                    sectionHeader(title: "🔧 User Background Services", count: userAgents.count)
+                    ForEach(userAgents) { item in
+                        itemRow(for: item)
+                            .listRowSeparator(.visible)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
+                }
+
+                // ── System Daemons / Agents ────────────────────────────────
+                let systemItems = manager.sortedItems(for: [.systemAgent, .systemDaemon])
+                if !systemItems.isEmpty {
+                    sectionHeaderWithAction(
+                        title: "🔒 System Background Services",
+                        count: systemItems.count,
+                        action: { manager.openSystemSettingsLoginItems() },
+                        actionLabel: "Open System Settings"
+                    )
+                    ForEach(systemItems) { item in
+                        itemRow(for: item)
+                            .listRowSeparator(.visible)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    }
+                }
+            }
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
     }
 
     // MARK: - Section headers

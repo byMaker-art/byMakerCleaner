@@ -83,14 +83,44 @@ struct AppListView: View {
     // MARK: - App list
 
     private var appList: some View {
-        List(appState.installedApps) { app in
-            appRow(app)
-                .listRowSeparator(.visible)
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                .contentShape(Rectangle())
-                .onTapGesture { appState.selectApp(app) }
+        VStack(spacing: 0) {
+            // ── Toolbar ─────────────────────────────────────────────────
+            HStack(spacing: 0) {
+                Spacer()
+
+                Text("Sort:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.trailing, 4)
+
+                ForEach(AppState.AppSortOrder.allCases, id: \.self) { order in
+                    let isActive = appState.appSortOrder == order
+                    Text(order.rawValue)
+                        .font(.caption)
+                        .fontWeight(isActive ? .bold : .regular)
+                        .foregroundColor(isActive ? .accentColor : .secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(isActive ? Color.accentColor.opacity(0.12) : Color.clear)
+                        .onTapGesture { appState.appSortOrder = order }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(Color(NSColor.windowBackgroundColor))
+
+            Divider()
+
+            // ── List ────────────────────────────────────────────────────
+            List(appState.sortedInstalledApps) { app in
+                appRow(app)
+                    .listRowSeparator(.visible)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                    .contentShape(Rectangle())
+                    .onTapGesture { appState.selectApp(app) }
+            }
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
     }
 
     private func appRow(_ app: InstalledApp) -> some View {
