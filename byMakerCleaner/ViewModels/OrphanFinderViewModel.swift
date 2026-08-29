@@ -6,20 +6,22 @@ final class OrphanFinderViewModel: ObservableObject {
 
     // MARK: - State
 
-    enum ScanState { case idle, scanning, done }
+    enum ScanState { case idle, buildingMap, scanning, done }
 
     enum SortOrder: String, CaseIterable {
-        case size        = "Size"
-        case name        = "Name"
-        case date        = "Date"
+        case size = "Size"
+        case name = "Name"
+        case date = "Date"
     }
 
     @Published var scanState: ScanState = .idle
-    @Published var rawFiles: [OrphanFile] = []          // Unsorted master list
+    @Published var rawFiles: [OrphanFile] = []
     @Published var selectedItems: Set<UUID> = []
     @Published var statusMessage: String = ""
     @Published var isDeleting: Bool = false
     @Published var sortOrder: SortOrder = .size
+    /// Progress of Pass 1 (0.0 – 1.0). Used to drive a progress indicator.
+    @Published var mapProgress: Double = 0.0
 
     private let engine = OrphanFinderEngine()
 
@@ -36,19 +38,38 @@ final class OrphanFinderViewModel: ObservableObject {
     // MARK: - Scan
 
     func startScan() {
-        guard scanState != .scanning else { return }
-        scanState = .scanning
-        statusMessage = "Scanning for orphan files..."
+        guard scanState != .buildingMap && scanState != .scanning else { return }
+        scanState = .buildingMap
+        statusMessage = "Analysing installed apps..."
         selectedItems = []
         rawFiles = []
+        mapProgress = 0.0
 
         Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
-            let installedBundleIDs = await self.engine.fetchInstalledBundleIDs()
-            let scanResult = await self.engine.scan(installedBundleIDs: installedBundleIDs)
+
+            // Progress callback runs on background thread — bounce to MainActor.
+            let progressHandler: @Sendable (Int, Int) -> Void = { [weak self] processed, total in
+                guard let self else { return }
+                let fraction = total > 0 ? Double(processed) / Double(total) : 0.0
+                Task { @MainActor in
+                    self.mapProgress = fraction
+                    self.statusMessage = "Building app map: \(processed)/\(total)..."
+                }
+            }
+
+            // Pass 1 + Pass 2 happen inside engine.scan()
+            await MainActor.run {
+                self.scanState = .scanning
+                self.statusMessage = "Scanning for orphan files..."
+            }
+
+            let scanResult = await self.engine.scan(progressHandler: progressHandler)
+
             await MainActor.run {
                 self.rawFiles = scanResult.files
                 self.scanState = .done
+                self.mapProgress = 1.0
                 if scanResult.files.isEmpty {
                     self.statusMessage = "No orphan files found — your Library is clean! 🎉"
                 } else {

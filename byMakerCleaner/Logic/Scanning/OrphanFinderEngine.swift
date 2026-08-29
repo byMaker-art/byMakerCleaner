@@ -8,7 +8,7 @@ struct OrphanFile: Identifiable {
     let id = UUID()
     let url: URL
     let size: Int64
-    let matchedBundleID: String  // Bundle ID / name fragment that identified this as orphan
+    let matchedBundleID: String
     var dateModified: Date = .distantPast
 
     var formattedSize: String {
@@ -31,31 +31,37 @@ struct OrphanScanResult {
 
 // MARK: - OrphanFinderEngine
 
-/// Scans known volatile Library directories for leftover files from applications
-/// that are NO LONGER installed on this Mac.
+/// Two-pass orphan scanner that mirrors PureMac's accurate "second scan" behaviour.
 ///
-/// Algorithm (matches PureMac "Scan for Orphans" approach):
+/// ## Algorithm
 ///
-///  1. Build a set of all installed app bundle IDs from /Applications, ~/Applications.
-///  2. For each candidate in OrphanSafetyPolicy.allowedRoots (Caches, Logs, etc.):
-///     a. If the folder/file name looks like a reverse-domain bundle ID (contains "."),
-///        call NSWorkspace.urlForApplication(withBundleIdentifier:) to see if it's installed.
-///        → Installed: skip. Not installed AND not in system allowlist: orphan.
-///     b. If the name is a plain word (no dots), check against the set of installed app
-///        names and a hardcoded system-service allowlist.
-///        → Not known: orphan candidate.
-///  3. System caches of Apple frameworks (GeoServices, CloudKit, GameKit, etc.) are
-///     excluded via the comprehensive systemCacheAllowlist below.
+/// ### Pass 1 — Build the "occupied paths" map
+/// For every installed application, run `AppPathFinder.findPaths()` (the same
+/// 10-level matching engine used by the App Uninstaller). All resulting URLs are
+/// collected into a `Set<String>` called `occupiedPaths`.
+///
+/// ### Pass 2 — Reverse scan
+/// Walk each directory in `OrphanSafetyPolicy.allowedRoots` (depth = 1).
+/// A candidate entry is an **orphan** only when ALL of the following hold:
+///   1. It passes `OrphanSafetyPolicy.isSafeCandidate`.
+///   2. Its resolved path is NOT in `occupiedPaths` (i.e. no installed app owns it).
+///   3. `NSWorkspace.urlForApplication(withBundleIdentifier:)` also returns nil for
+///      any bundle-ID-like name derived from the entry — belt-and-suspenders check.
+///   4. The entry is not covered by `skipReverse` or `systemCacheAllowlist`.
+///
+/// This is identical to what PureMac does on its second "Scan for Orphans" press —
+/// the first press uses a fast heuristic that over-reports; the second press runs
+/// the full `AppPathFinder` pass which we replicate here from the start, so users
+/// always get accurate results on the very first scan.
 actor OrphanFinderEngine {
 
     private let fm = FileManager.default
     private let workspace = NSWorkspace.shared
 
     // MARK: - System cache allowlist
-    // These folder names appear in ~/Library/Caches and related dirs but belong to
-    // Apple OS frameworks, daemons, or deeply-embedded system services — NOT user apps.
+    // Folder names in ~/Library/Caches and related dirs that belong to
+    // Apple OS frameworks, daemons, or deeply embedded system services.
     private static let systemCacheAllowlist: Set<String> = [
-        // Apple frameworks / OS daemons
         "com.apple", "apple", "geoservices", "cloudkit", "passkit", "gamekit",
         "colorsyncsyncservice", "colorsync", "animoji", "sirikit", "coremedia",
         "coremotion", "coredata", "corelocation", "corebluetooth", "corewlan",
@@ -95,7 +101,7 @@ actor OrphanFinderEngine {
         "mapsd", "maps",
         "newsd", "news",
         "stockswidget",
-        "familycircle", "familycircled",    // Family Sharing daemon — system
+        "familycircle", "familycircled",
         "transparencyd", "privacyd",
         "voip", "callkit",
         "sms", "imessage", "ids",
@@ -105,46 +111,85 @@ actor OrphanFinderEngine {
         "cbtoolspath", "ubiquity",
         "secureelement",
         "gpurestartd",
-        "syslog",
-        "oslog",
-        "crashreporter",                    // system crash reporter infra (not user apps)
-        // Saved Application State (only OS sessions)
-        "com.apple.safari", "com.apple.finder",
-        // Named caches from embedded OS frameworks
-        "installation",
-        "lkdc-setup",
-        "mcxtools",
-        "photossearch",
-        "nsattributedstringagent",
-        // Generic infra noise
+        "syslog", "oslog",
+        "crashreporter",
+        "installation", "lkdc-setup", "mcxtools",
+        "photossearch", "nsattributedstringagent",
         "tmp", "temp", "cache", "caches", "logs", "run", "lock",
         "windowserver", "intervals", "typescript", "pip", "sentrycrash"
     ]
 
     // MARK: - Public API
 
-    /// Fetch a set of all installed app bundle IDs for fast lookup.
-    func fetchInstalledBundleIDs() -> Set<String> {
-        var ids: Set<String> = []
-        let appDirs = [
-            "/Applications",
-            "\(fm.homeDirectoryForCurrentUser.path)/Applications",
-            "/Users/Shared",
-        ]
-        for dir in appDirs {
-            guard let contents = try? fm.contentsOfDirectory(atPath: dir) else { continue }
-            for entry in contents where entry.hasSuffix(".app") {
-                let appURL = URL(fileURLWithPath: "\(dir)/\(entry)")
-                if let bid = Bundle(url: appURL)?.bundleIdentifier {
-                    ids.insert(bid.lowercased())
-                }
-            }
-        }
-        return ids
+    /// Full two-pass scan.
+    ///
+    /// - Parameter progressHandler: Called on background thread with
+    ///   `(appsProcessed, totalApps)` during Pass 1 so the UI can show progress.
+    /// - Returns: An `OrphanScanResult` containing only files/folders that
+    ///   are definitely NOT owned by any currently installed application.
+    func scan(
+        progressHandler: (@Sendable (Int, Int) -> Void)? = nil
+    ) async -> OrphanScanResult {
+
+        // ── Pass 1: build occupied-paths map ────────────────────────────
+        let occupiedPaths = await buildOccupiedPaths(progressHandler: progressHandler)
+
+        // ── Pass 2: reverse scan ─────────────────────────────────────────
+        return performReverseScan(occupiedPaths: occupiedPaths)
     }
 
-    /// Main scan. Returns orphan files only — items whose owning app is definitely gone.
-    func scan(installedBundleIDs: Set<String>) -> OrphanScanResult {
+    // MARK: - Pass 1: Occupied Paths
+
+    /// Runs `AppPathFinder` for every installed app in parallel and merges
+    /// all discovered paths into a single `Set<String>` of normalised paths.
+    private func buildOccupiedPaths(
+        progressHandler: (@Sendable (Int, Int) -> Void)?
+    ) async -> Set<String> {
+
+        // Fetch all installed apps (reuses the existing AppInfoFetcher)
+        let apps = AppInfoFetcher.shared.fetchInstalledApps()
+        let total = apps.count
+        var occupiedPaths = Set<String>()
+
+        // Use a TaskGroup so all apps are scanned concurrently.
+        // Each child returns a Set<URL> of paths belonging to that app.
+        await withTaskGroup(of: (Int, Set<URL>).self) { group in
+            for (index, app) in apps.enumerated() {
+                let capturedApp = app
+                group.addTask {
+                    let locations = Locations()
+                    // Use .enhanced sensitivity — same as the App Uninstaller.
+                    let finder = AppPathFinder(
+                        appInfo: capturedApp,
+                        locations: locations,
+                        sensitivity: .enhanced
+                    )
+                    let paths = finder.findPaths()
+                    return (index + 1, paths)
+                }
+            }
+
+            for await (processed, paths) in group {
+                for url in paths {
+                    // Normalise: resolve symlinks so ~/Library and
+                    // /private/var/folders/... map to the same key.
+                    let resolved = url.resolvingSymlinksInPath().path
+                    occupiedPaths.insert(resolved)
+                    // Also insert the standardised form as belt-and-suspenders
+                    occupiedPaths.insert(url.standardizedFileURL.path)
+                }
+                progressHandler?(processed, total)
+            }
+        }
+
+        return occupiedPaths
+    }
+
+    // MARK: - Pass 2: Reverse Scan
+
+    /// Walks every path in `OrphanSafetyPolicy.allowedRoots` (depth = 1) and
+    /// returns only entries whose path is NOT in `occupiedPaths`.
+    private func performReverseScan(occupiedPaths: Set<String>) -> OrphanScanResult {
         var result = OrphanScanResult()
 
         for rootPath in OrphanSafetyPolicy.allowedRoots {
@@ -159,66 +204,59 @@ actor OrphanFinderEngine {
             ) else { continue }
 
             for case let url as URL in enumerator {
-                // Only top-level entries in each allowed root (depth = 1)
+                // Only top-level entries (depth = 1)
                 let depth = url.pathComponents.count - rootURL.pathComponents.count
                 guard depth == 1 else { continue }
 
-                // Safety check
+                // Safety gate: OrphanSafetyPolicy must approve the candidate
                 guard OrphanSafetyPolicy.isSafeCandidate(url) else { continue }
+
+                let resolvedPath = url.resolvingSymlinksInPath().path
+                let standardPath = url.standardizedFileURL.path
+
+                // ── Core check: is this path owned by any installed app? ──
+                // If YES → skip immediately. This is the key improvement over
+                // the old heuristic-only approach (PureMac "second scan" logic).
+                if occupiedPaths.contains(resolvedPath) ||
+                   occupiedPaths.contains(standardPath) ||
+                   occupiedPaths.contains(url.path) {
+                    continue
+                }
+
+                // ── Also check if any parent in occupiedPaths owns this entry ──
+                // e.g. ~/Library/Application Support/MyApp is in occupiedPaths,
+                // so ~/Library/Application Support/MyApp/Cache should be skipped.
+                if occupiedPaths.contains(where: { resolvedPath.hasPrefix($0 + "/") }) {
+                    continue
+                }
 
                 let name = url.lastPathComponent
                 let nameLower = name.lowercased()
 
-                // ── Decide if this is an orphan ──────────────────────────
+                // ── System allowlist ──────────────────────────────────────
+                let key = nameLower.replacingOccurrences(of: " ", with: "")
+                if Self.systemCacheAllowlist.contains(key) { continue }
+                if Self.systemCacheAllowlist.contains(where: {
+                    key.hasPrefix($0) || $0.hasPrefix(key)
+                }) { continue }
 
-                // Case A: reverse-domain bundle ID (contains at least one dot and
-                // looks like "com.something.something")
+                // ── skipReverse ───────────────────────────────────────────
+                if skipReverse.contains(where: { key.hasPrefix($0) || $0.hasPrefix(key) }) {
+                    continue
+                }
+
+                // ── Belt-and-suspenders: NSWorkspace bundle ID lookup ─────
+                // Even if AppPathFinder missed it, NSWorkspace may know the app.
                 if looksLikeBundleID(nameLower) {
-                    // Strip file extensions (.binarycookies, .plist, .log, etc.)
-                    let baseBundleID = stripExtension(nameLower)
-
-                    // Installed? → NOT an orphan
-                    if installedBundleIDs.contains(baseBundleID) { continue }
-
-                    // Use NSWorkspace to check if any app with this bundle ID is installed
-                    if workspace.urlForApplication(withBundleIdentifier: baseBundleID) != nil { continue }
-                    // Also check without the last component (sub-bundle like com.foo.bar.Menu)
-                    if let parent = parentBundleID(baseBundleID),
+                    let baseBID = stripExtension(nameLower)
+                    if workspace.urlForApplication(withBundleIdentifier: baseBID) != nil { continue }
+                    if let parent = parentBundleID(baseBID),
                        workspace.urlForApplication(withBundleIdentifier: parent) != nil { continue }
+                }
 
-                    // Check skipReverse
-                    if skipReverse.contains(where: { baseBundleID.contains($0) }) { continue }
-
-                    // Still here → app is gone → orphan
-                    if let orphan = makeOrphan(url: url, matchedBundleID: baseBundleID) {
-                        result.files.append(orphan)
-                    }
-
-                } else {
-                    // Case B: plain name (no dots) — e.g. "JetPackCache", "pip", "typescript"
-
-                    // Check system allowlist first
-                    let key = nameLower.replacingOccurrences(of: " ", with: "")
-                    if Self.systemCacheAllowlist.contains(key) { continue }
-                    // Also check partial prefix match (e.g. "geoservices" contains "geo")
-                    if Self.systemCacheAllowlist.contains(where: { key.hasPrefix($0) || $0.hasPrefix(key) }) { continue }
-
-                    // Check skipReverse
-                    if skipReverse.contains(where: { key.hasPrefix($0) || $0.hasPrefix(key) }) { continue }
-
-                    // Check if any installed app name matches (case-insensitive)
-                    // We compare against bundle ID components as well
-                    let isKnown = installedBundleIDs.contains(where: { bid in
-                        let parts = bid.split(separator: ".").map(String.init)
-                        return parts.contains(key) || bid.contains(key)
-                    })
-                    if isKnown { continue }
-
-                    // Check NSWorkspace by trying common prefixes
-                    // (plain-named caches rarely map back to a bundle ID — treat them as orphan only if size > 0)
-                    if let orphan = makeOrphan(url: url, matchedBundleID: name) {
-                        result.files.append(orphan)
-                    }
+                // ── Passed all checks → orphan ────────────────────────────
+                if let orphan = makeOrphan(url: url, matchedBundleID: name) {
+                    result.files.append(orphan)
                 }
             }
         }
@@ -228,18 +266,15 @@ actor OrphanFinderEngine {
         return result
     }
 
-    // MARK: - Private helpers
+    // MARK: - Helpers
 
-    /// Returns true if the name looks like a reverse-domain bundle ID.
     private func looksLikeBundleID(_ name: String) -> Bool {
         let base = stripExtension(name)
-        // Must contain at least one dot AND start with a known TLD-like prefix
         guard base.contains(".") else { return false }
         let prefixes = ["com.", "org.", "net.", "io.", "co.", "jp.", "de.", "uk.", "fr."]
         return prefixes.contains(where: { base.hasPrefix($0) })
     }
 
-    /// Strip common file extensions from a candidate name.
     private func stripExtension(_ name: String) -> String {
         let knownExtensions = [".binarycookies", ".plist", ".log", ".sqlite",
                                ".db", ".cache", ".data", ".lock", ".aapbz"]
@@ -250,15 +285,12 @@ actor OrphanFinderEngine {
         return result
     }
 
-    /// Returns the parent bundle ID (drops the last component).
-    /// e.g. "com.foo.bar.menu" → "com.foo.bar"
     private func parentBundleID(_ bid: String) -> String? {
         let parts = bid.split(separator: ".")
         guard parts.count > 2 else { return nil }
         return parts.dropLast().joined(separator: ".")
     }
 
-    /// Build an OrphanFile value, computing size and modification date.
     private func makeOrphan(url: URL, matchedBundleID: String) -> OrphanFile? {
         let size = directoryOrFileSize(url)
         guard size >= 0 else { return nil }

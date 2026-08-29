@@ -12,25 +12,17 @@ targets:
     info:
       path: byMakerCleaner/Info.plist
       properties:
-        CFBundleShortVersionString: 1.1.0
-        CFBundleVersion: 2
+        CFBundleShortVersionString: 1.1.2
+        CFBundleVersion: 3
         NSPrincipalClass: NSApplication
         LSMinimumSystemVersion: 13.0.0
         LSUIElement: false
-        # URL scheme for deep-links (e.g. bymakercleaner://settings)
-        CFBundleURLTypes:
-          - CFBundleURLName: com.bymaker.byMakerCleaner
-            CFBundleURLSchemes:
-              - bymakercleaner
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bymaker.byMakerCleaner
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "" # Set this in Xcode if needed
-        MARKETING_VERSION: 1.1.0
-        CURRENT_PROJECT_VERSION: 2
+        MARKETING_VERSION: 1.1.2
+        CURRENT_PROJECT_VERSION: 3
         GENERATE_INFOPLIST_FILE: YES
-        SWIFT_VERSION: 5.0
-        # Swift 6 mode is NOT forced here to avoid warnings for now.
-
-
+        SWIFT_VERSION: 6.0

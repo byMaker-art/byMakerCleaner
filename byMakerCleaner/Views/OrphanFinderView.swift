@@ -42,16 +42,23 @@ struct OrphanFinderView: View {
     }
 
     private var scanButton: some View {
-        let isScanning = vm.scanState == .scanning
-        return Text(isScanning ? "Scanning..." : "Scan")
+        let isBusy = vm.scanState == .buildingMap || vm.scanState == .scanning
+        let label: String = {
+            switch vm.scanState {
+            case .buildingMap: return "Building map..."
+            case .scanning:    return "Scanning..."
+            default:           return "Scan"
+            }
+        }()
+        return Text(label)
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(isScanning ? .secondary : .accentColor)
+            .foregroundColor(isBusy ? .secondary : .accentColor)
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
-            .background(Color.accentColor.opacity(isScanning ? 0.05 : 0.12))
+            .background(Color.accentColor.opacity(isBusy ? 0.05 : 0.12))
             .cornerRadius(6)
-            .onTapGesture { if !isScanning { vm.startScan() } }
+            .onTapGesture { if !isBusy { vm.startScan() } }
     }
 
     // MARK: - Content
@@ -59,8 +66,9 @@ struct OrphanFinderView: View {
     @ViewBuilder
     private var contentArea: some View {
         switch vm.scanState {
-        case .idle:    idlePlaceholder
-        case .scanning: scanningView
+        case .idle:        idlePlaceholder
+        case .buildingMap: buildingMapView
+        case .scanning:    scanningView
         case .done:
             if vm.rawFiles.isEmpty { emptyView } else { resultsList }
         }
@@ -77,12 +85,33 @@ struct OrphanFinderView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// Pass 1 — building occupied-paths map via AppPathFinder
+    private var buildingMapView: some View {
+        VStack(spacing: 14) {
+            Text("🗂").font(.system(size: 40))
+            Text("Building app map...")
+                .font(.subheadline).foregroundColor(.secondary)
+            Text(vm.statusMessage)
+                .font(.caption).foregroundColor(.secondary)
+                .lineLimit(1)
+            // GPU-safe text progress bar (no ProgressView to avoid Metal)
+            let filled  = Int(vm.mapProgress * 20)
+            let empty   = 20 - filled
+            Text("[" + String(repeating: "█", count: filled)
+                     + String(repeating: "░", count: empty) + "]")
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundColor(.accentColor)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Pass 2 — actual reverse scan
     private var scanningView: some View {
         VStack(spacing: 12) {
             Text("🔍").font(.system(size: 40))
             Text("Scanning Library directories...")
                 .font(.subheadline).foregroundColor(.secondary)
-            Text("This may take a few seconds")
+            Text("Almost done — cross-checking against app map")
                 .font(.caption).foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
