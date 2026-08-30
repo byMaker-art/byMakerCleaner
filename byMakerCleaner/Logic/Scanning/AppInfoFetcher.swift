@@ -7,7 +7,10 @@ struct InstalledApp: Identifiable, Hashable {
     let bundleIdentifier: String
     let path: URL
     let icon: NSImage
-    let size: Int64
+    // Initially set to the .app bundle size only.
+    // AppState.loadInstalledApps() updates this asynchronously with the
+    // true total (app bundle + all related files found by AppPathFinder).
+    var size: Int64
     let entitlements: [String]?
     let teamIdentifier: String?
     var formattedSize: String {

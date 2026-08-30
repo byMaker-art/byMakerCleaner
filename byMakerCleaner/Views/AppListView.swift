@@ -32,9 +32,16 @@ struct AppListView: View {
             }
             Spacer()
             if !appState.installedApps.isEmpty {
-                Text("\(appState.installedApps.count) apps")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(appState.installedApps.count) apps")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if appState.isRecalculatingSizes {
+                        Text("calculating sizes...")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             rescanButton
         }
@@ -43,16 +50,18 @@ struct AppListView: View {
     }
 
     private var rescanButton: some View {
-        let isLoading = appState.isLoadingApps
-        return Text(isLoading ? "Scanning..." : "Rescan")
+        let isBusy = appState.isLoadingApps || appState.isRecalculatingSizes
+        let label = appState.isLoadingApps ? "Scanning..." :
+                    appState.isRecalculatingSizes ? "Calculating..." : "Rescan"
+        return Text(label)
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(isLoading ? .secondary : .accentColor)
+            .foregroundColor(isBusy ? .secondary : .accentColor)
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
-            .background(Color.accentColor.opacity(isLoading ? 0.05 : 0.12))
+            .background(Color.accentColor.opacity(isBusy ? 0.05 : 0.12))
             .cornerRadius(6)
-            .onTapGesture { if !isLoading { appState.loadInstalledApps() } }
+            .onTapGesture { if !isBusy { appState.loadInstalledApps() } }
     }
 
     // MARK: - Content

@@ -314,6 +314,65 @@ let appConditions: [AppCondition] = [
         includeTerms: ["archon.loginhelper"],
         excludeTerms: []
     ),
+
+    // ---------------------------------------------------------------
+    // Games & Launchers
+    // ---------------------------------------------------------------
+
+    // Steam: stores ~1+ GB of game data under "Steam" (not the bundle ID).
+    // ~/Library/Application Support/Steam contains steamapps, config, userdata.
+    // ~/Library/Caches/Steam contains shader caches.
+    // Without forceIncludePaths the heuristic finds the .app (11 MB) only,
+    // because "steam" ≠ "comvalvesoftwaresteam" in normalized form at depth-2.
+    AppCondition(
+        bundleID: "com.valvesoftware.steam",
+        includeTerms: ["steam", "valvesoftware"],
+        excludeTerms: [],
+        forceIncludePaths: [
+            "\(home)/Library/Application Support/Steam",
+            "\(home)/Library/Caches/Steam",
+            "\(home)/Library/LaunchAgents/com.valvesoftware.steamclean.plist"
+        ]
+    ),
+
+    // Epic Games Launcher: stores game library in a non-obvious location.
+    AppCondition(
+        bundleID: "com.epicgames.launcher",
+        includeTerms: ["epicgames", "epic"],
+        excludeTerms: [],
+        forceIncludePaths: [
+            "\(home)/Library/Application Support/Epic Games",
+            "\(home)/Library/Application Support/com.epicgames.launcher",
+            "\(home)/Library/Caches/com.epicgames.launcher"
+        ]
+    ),
+
+    // Battle.net (Blizzard): stores game data outside standard paths.
+    AppCondition(
+        bundleID: "net.battle.app",
+        includeTerms: ["battlenet", "blizzard"],
+        excludeTerms: [],
+        forceIncludePaths: [
+            "\(home)/Library/Application Support/Battle.net",
+            "\(home)/Library/Caches/com.blizzard.battle.net"
+        ]
+    ),
+
+    // ---------------------------------------------------------------
+    // Browsers — additional profile data
+    // ---------------------------------------------------------------
+
+    // Spotify: stores large audio cache in Application Support/Spotify
+    AppCondition(
+        bundleID: "com.spotify.client",
+        includeTerms: ["spotify"],
+        excludeTerms: [],
+        forceIncludePaths: [
+            "\(home)/Library/Application Support/Spotify",
+            "\(home)/Library/Caches/com.spotify.client"
+        ]
+    ),
+
 ]
 
 // MARK: - Skip Conditions

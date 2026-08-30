@@ -41,16 +41,54 @@ final class AppState: ObservableObject {
 
     // MARK: - App Uninstaller methods
 
+    // True while the initial .app-only sizes are being replaced with
+    // the real totals (AppPathFinder pass). UI can show a spinner.
+    @Published var isRecalculatingSizes: Bool = false
+
     func loadInstalledApps() {
         guard !isLoadingApps else { return }
         isLoadingApps = true
 
         Task {
+            // Step 1 — fast load: show list immediately with .app-only sizes
             let apps = await Task.detached(priority: .userInitiated) {
                 AppInfoFetcher.shared.fetchInstalledApps()
             }.value
             self.installedApps = apps
             self.isLoadingApps = false
+
+            // Step 2 — background recalculation: update each app's size
+            // to the true total (app bundle + all AppPathFinder results).
+            // We run all apps in parallel via TaskGroup, then batch-update
+            // on the main actor when all results are ready.
+            self.isRecalculatingSizes = true
+            let recalculated: [(UUID, Int64)] = await Task.detached(priority: .background) {
+                let locations = Locations()
+                return await withTaskGroup(of: (UUID, Int64).self) { group in
+                    for app in apps {
+                        group.addTask {
+                            let paths = AppPathFinder(appInfo: app, locations: locations).findPaths()
+                            // Sum all related files; use the app bundle as minimum
+                            let total = paths.reduce(Int64(0)) { acc, url in
+                                acc + (FileSizeCalculator.size(of: url) ?? 0)
+                            }
+                            return (app.id, max(total, app.size))
+                        }
+                    }
+                    var results: [(UUID, Int64)] = []
+                    for await pair in group { results.append(pair) }
+                    return results
+                }
+            }.value
+
+            // Apply all size updates at once to avoid n individual publishes
+            let sizeMap = Dictionary(uniqueKeysWithValues: recalculated)
+            for i in self.installedApps.indices {
+                if let newSize = sizeMap[self.installedApps[i].id] {
+                    self.installedApps[i].size = newSize
+                }
+            }
+            self.isRecalculatingSizes = false
         }
     }
 
