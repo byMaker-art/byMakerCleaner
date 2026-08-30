@@ -85,6 +85,17 @@ let appConditions: [AppCondition] = [
         ]
     ),
 
+    // Developer.app — Apple WWDC app (developer.apple.wwdc-Release).
+    // SAFETY: The app name is "Developer" which naively matches ~/Library/Developer
+    // and /Library/Developer (Xcode DerivedData, Simulators, toolchains — 30+ GB!).
+    // This condition locks the search to the bundle ID prefix only and explicitly
+    // blocks the 'developer' name-token so it can never capture system directories.
+    AppCondition(
+        bundleID: "developer.apple.wwdc-release",
+        includeTerms: ["developer.apple.wwdc"],  // only match the explicit bundle ID prefix
+        excludeTerms: ["developer", "library", "xcode", "simulator"]  // block all generic tokens
+    ),
+
     // Xcodes.app (robotsandpencils variant)
     AppCondition(
         bundleID: "com.robotsandpencils.xcodesapp",
@@ -373,6 +384,56 @@ let appConditions: [AppCondition] = [
         ]
     ),
 
+    // ---------------------------------------------------------------
+    // Apps with name collision — require isolation from each other
+    // ---------------------------------------------------------------
+
+    // Antigravity (com.google.antigravity): must NOT capture files of Antigravity IDE.
+    // "antigravity" as a search token matches both apps' file names.
+    // excludeTerms blocks the IDE-specific bundle suffixes from being counted.
+    AppCondition(
+        bundleID: "com.google.antigravity",
+        includeTerms: ["com.google.antigravity"],
+        excludeTerms: ["antigravity-ide", "antigravityide", "antigravity ide"]
+    ),
+
+    // Antigravity IDE (com.google.antigravity-ide): must NOT capture base Antigravity files.
+    AppCondition(
+        bundleID: "com.google.antigravity-ide",
+        includeTerms: ["com.google.antigravity-ide", "antigravity-ide", "antigravityide"],
+        excludeTerms: []
+    ),
+
+    // CLIP STUDIO (jp.co.celsys.CLIPSTUDIO): must NOT capture CLIP STUDIO PAINT files.
+    // Both apps share "clip studio" in their name, causing cross-contamination.
+    AppCondition(
+        bundleID: "jp.co.celsys.clipstudio",
+        includeTerms: ["jp.co.celsys.clipstudio"],
+        excludeTerms: ["clipstudiopaint", "clip studio paint", "celsys.clipstudiopaint"]
+    ),
+
+    // CLIP STUDIO PAINT (jp.co.celsys.CLIPSTUDIOPAINT): must NOT capture CLIP STUDIO files.
+    AppCondition(
+        bundleID: "jp.co.celsys.clipstudiopaint",
+        includeTerms: ["jp.co.celsys.clipstudiopaint", "clipstudiopaint"],
+        excludeTerms: ["jp.co.celsys.clipstudio"]
+    ),
+
+    // ---------------------------------------------------------------
+    // System Components — must never be offered for deletion
+    // ---------------------------------------------------------------
+
+    // OpenCore-Patcher (com.dortania.opencore-legacy-patcher):
+    // This is a CRITICAL OCLP system component. Its files in ~/Library/Logs/Dortania
+    // are already protected by OrphanSafetyPolicy, but we add an explicit
+    // forceExcludePaths guard here so the Uninstaller also never inflates its size
+    // by capturing system-level OCLP artifacts.
+    AppCondition(
+        bundleID: "com.dortania.opencore-legacy-patcher",
+        includeTerms: ["com.dortania.opencore-legacy-patcher", "opencore-legacy-patcher"],
+        excludeTerms: ["dortania", "opencore", "oclp"]  // block loose tokens — too dangerous
+    ),
+
 ]
 
 // MARK: - Skip Conditions
@@ -398,6 +459,14 @@ let skipConditions: [SkipCondition] = [
         ],
         skipPaths: [
             "\(home)/.Trash",
+            // Developer directories: contains Xcode DerivedData, iOS Simulators,
+            // Instruments, toolchains. These are Xcode's data, NOT files belonging
+            // to any third-party app. Including them would inflate sizes by 30+ GB
+            // and risk destroying developer environments.
+            // Developer.app (Apple WWDC) must NEVER capture these paths.
+            "\(home)/Library/Developer",
+            "/Library/Developer",
+            // System extension infrastructure
             "/Library/SystemExtensions",
             "/System/Volumes/Preboot/Cryptexes/App/System/Library/CoreServices/PasswordManagerBrowserExtensionHelper.app/Contents/MacOS/PasswordManagerBrowserExtensionHelper",
             "\(home)/Library/Application Support/Chromium/NativeMessagingHosts/com.apple.passwordmanager.json",
