@@ -113,14 +113,15 @@ final class OrphanFinderViewModel: ObservableObject {
                     errors.append(file.name)
                 }
             }
+            let finalErrors = errors   // capture immutable copy for @MainActor closure
             await MainActor.run {
                 self.rawFiles.removeAll { self.selectedItems.contains($0.id) }
                 self.selectedItems = []
                 self.isDeleting = false
-                if errors.isEmpty {
+                if finalErrors.isEmpty {
                     self.statusMessage = "Moved to Trash: \(toDelete.count) item(s) ✓"
                 } else {
-                    self.statusMessage = "Done. Could not trash: \(errors.joined(separator: ", "))"
+                    self.statusMessage = "Done. Could not trash: \(finalErrors.joined(separator: ", "))"
                 }
             }
         }

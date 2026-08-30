@@ -61,12 +61,15 @@ actor OrphanFinderEngine {
     // MARK: - System cache allowlist
     // Folder names in ~/Library/Caches and related dirs that belong to
     // Apple OS frameworks, daemons, or deeply embedded system services.
+    // This is a SECOND safety net — OrphanSafetyPolicy is the primary gate.
+    // Any item whose name starts with or contains one of these keys is skipped.
     private static let systemCacheAllowlist: Set<String> = [
+        // Apple platform
         "com.apple", "apple", "geoservices", "cloudkit", "passkit", "gamekit",
-        "colorsyncsyncservice", "colorsync", "animoji", "sirikit", "coremedia",
-        "coremotion", "coredata", "corelocation", "corebluetooth", "corewlan",
-        "coreaudio", "coregraphics", "coreimage", "corespotlight", "corenfc",
-        "corehaptics", "coreml", "coretelephony", "coredaemon",
+        "colorsyncsyncservice", "colorsync", "animoji", "sirikit",
+        "coremedia", "coremotion", "coredata", "corelocation", "corebluetooth",
+        "corewlan", "coreaudio", "coregraphics", "coreimage", "corespotlight",
+        "corenfc", "corehaptics", "coreml", "coretelephony", "coredaemon",
         "networkextension", "network", "nsurlsessiond", "cfnetwork",
         "trustd", "notifyd", "symptomsd", "powerd", "logd", "configd",
         "sandboxd", "sysmond", "mdsync", "mds", "mds_stores",
@@ -116,7 +119,77 @@ actor OrphanFinderEngine {
         "installation", "lkdc-setup", "mcxtools",
         "photossearch", "nsattributedstringagent",
         "tmp", "temp", "cache", "caches", "logs", "run", "lock",
-        "windowserver", "intervals", "typescript", "pip", "sentrycrash"
+        "windowserver", "intervals", "typescript", "pip", "sentrycrash",
+
+        // ── Apple filesystem & networking protocols (NEVER touch) ──────────
+        "xsan",             // Apple Xsan cluster filesystem (enterprise SAN)
+        "xsand",            // Xsan daemon
+        "afp",              // Apple Filing Protocol
+        "smb",              // SMB/CIFS networking
+
+        // ── Firewall & network security ────────────────────────────────────
+        "hidfw",            // Host Intrusion Detection Firewall
+        "hidfw-crashlogs",  // HID Firewall crash logs
+        "alf",              // Application Layer Firewall
+        "socketfilterfw",   // Socket Filter Firewall
+        "pfctl",            // Packet Filter
+        "lkdcsetup",        // Kerberos/LKDC setup
+
+        // ── OCLP / OpenCore (CRITICAL on patched legacy systems) ───────────
+        // Deleting these on an OCLP-patched Mac can break the system entirely.
+        "dortania",                  // Dortania OCLP project artifacts
+        "opencore",                  // OpenCore bootloader
+        "oclp",                      // OpenCore Legacy Patcher abbreviation
+        "opencorelegacypatcher",     // Full name form
+        "ocvalidate",                // OC config validator
+        "opcore",                    // Alternate spelling found in the wild
+
+        // ── Time Machine & APFS internals ─────────────────────────────────
+        "timemachine",
+        "backupd",
+        "com.apple.timemachine",
+        "apfs",
+        "diskarbitrationd",
+        "fsck",                      // Filesystem check utility
+
+        // ── Boot, firmware & recovery ──────────────────────────────────────
+        "recovery",
+        "recoveryos",
+        "bootp",
+        "bless",
+        "efi",
+        "nvram",
+
+        // ── SIP / system integrity ─────────────────────────────────────────
+        "amfid",            // AMF integrity daemon (enforces code signing)
+        "csr",              // Configuration Store Restrictions
+        "sip",              // System Integrity Protection
+
+        // ── Kext & driver infrastructure ───────────────────────────────────
+        "kextd",
+        "kexts",
+        "kextcache",
+        "sysextd",
+        "ioreg",
+        "iobluetooth",      // Keep system Bluetooth data safe
+
+        // ── Installer & package infrastructure ─────────────────────────────
+        "pkgutil",
+        "receipts",
+        "bom",              // Bill Of Materials
+
+        // ── Analytics & diagnostics daemons ───────────────────────────────
+        "diagnosticd",
+        "sysdiagnose",
+        "spindump",
+        "oomanalyticsd",
+        "wifivelalog",
+
+        // ── Power management ───────────────────────────────────────────────
+        "powerlog",
+        "powerdatad",
+        "batteryd",
+        "pmset"
     ]
 
     // MARK: - Public API
