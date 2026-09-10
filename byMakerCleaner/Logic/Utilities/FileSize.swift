@@ -9,7 +9,7 @@ import Foundation
 /// items display as a handful of bytes. For directories we enumerate and sum
 /// the regular files instead.
 enum FileSizeCalculator {
-    private static let fileManager = FileManager.default
+    nonisolated(unsafe) private static let fileManager = FileManager.default
 
     /// On-disk allocated size of `url`. Recurses into directories.
     /// Returns `nil` if the item can't be read at all.

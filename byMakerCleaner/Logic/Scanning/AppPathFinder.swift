@@ -11,7 +11,8 @@
 import Foundation
 import AppKit
 
-class AppPathFinder {
+class AppPathFinder: @unchecked Sendable {
+
 
     // MARK: - Types
 
@@ -87,7 +88,19 @@ class AppPathFinder {
     /// Find all files related to this app synchronously.
     func findPaths() -> Set<URL> {
         collectionSet.insert(appInfo.path)
+        
+        // 1. Cask Database Fast-Path (Exact known paths)
+        if let caskPaths = CaskDatabase.zapPaths[normalizedAppName] {
+            let expandedURLs = caskPaths.flatMap { Glob.expand($0) }
+            collectionSet.formUnion(expandedURLs)
+            
+            // Still apply conditions to ensure system files are never matched,
+            // even if Cask data contains broad globs.
+            applyConditions()
+            return filterSubpaths(collectionSet)
+        }
 
+        // 2. Fallback Heuristic Search (Unknown apps)
         for location in locations.appSearch.paths {
             let isLibRoot = isLibraryDirectory(location)
             let maxDepth = isLibRoot ? 2 : 1
@@ -103,9 +116,26 @@ class AppPathFinder {
     }
 
     /// Find all files related to this app with parallel location processing.
-    func findPathsAsync(completion: @escaping (Set<URL>) -> Void) {
+    func findPathsAsync(completion: @escaping @Sendable (Set<URL>) -> Void) {
         collectionSet.insert(appInfo.path)
+        
+        // 1. Cask Database Fast-Path
+        if let caskPaths = CaskDatabase.zapPaths[normalizedAppName] {
+            DispatchQueue.global(qos: .userInitiated).async {
+                let expandedURLs = caskPaths.flatMap { Glob.expand($0) }
+                self.collectionQueue.sync {
+                    self.collectionSet.formUnion(expandedURLs)
+                }
+                self.applyConditions()
+                let result = self.filterSubpaths(self.collectionSet)
+                DispatchQueue.main.async {
+                    completion(result)
+                }
+            }
+            return
+        }
 
+        // 2. Fallback Heuristic Search
         let group = DispatchGroup()
         for location in locations.appSearch.paths {
             group.enter()
@@ -129,6 +159,7 @@ class AppPathFinder {
             }
         }
     }
+
 
     // MARK: - Location Processing
 

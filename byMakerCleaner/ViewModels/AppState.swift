@@ -13,6 +13,10 @@ final class AppState: ObservableObject {
     @Published var selectedAppJunkPaths: [URL] = []
     @Published var isScanningJunk: Bool = false
 
+    // MARK: - User DB Banner state
+    @Published var pendingUserDBApp: InstalledApp? = nil
+    @Published var pendingUserDBPaths: [URL]? = nil
+
     enum AppSortOrder: String, CaseIterable {
         case name = "Name"
         case size = "Size"
@@ -41,35 +45,37 @@ final class AppState: ObservableObject {
 
     // MARK: - App Uninstaller methods
 
-    // True while the initial .app-only sizes are being replaced with
-    // the real totals (AppPathFinder pass). UI can show a spinner.
+    // True while Cask sizes are being computed via Glob.expand().
     @Published var isRecalculatingSizes: Bool = false
+    // True while heuristic scan runs for selected Unknown apps.
+    @Published var isHeuristicScanning: Bool = false
 
     func loadInstalledApps() {
         guard !isLoadingApps else { return }
         isLoadingApps = true
 
         Task {
-            // Step 1 — fast load: show list immediately with .app-only sizes
+            // Step 1 — fast load: AppInfoFetcher already marks each app as
+            // isKnownApp=true/false and stores caskPaths from CaskDatabase.
             let apps = await Task.detached(priority: .userInitiated) {
                 AppInfoFetcher.shared.fetchInstalledApps()
             }.value
             self.installedApps = apps
             self.isLoadingApps = false
 
-            // Step 2 — background recalculation: update each app's size
-            // to the true total (app bundle + all AppPathFinder results).
-            // We run all apps in parallel via TaskGroup, then batch-update
-            // on the main actor when all results are ready.
+            // Step 2 — for Cask-known apps only: expand glob paths and
+            // compute the real total size. This is fast (no disk walk needed,
+            // only stat() on already-known paths).
             self.isRecalculatingSizes = true
-            let recalculated: [(UUID, Int64)] = await Task.detached(priority: .background) {
-                let locations = Locations()
-                return await withTaskGroup(of: (UUID, Int64).self) { group in
-                    for app in apps {
-                        group.addTask {
-                            let paths = AppPathFinder(appInfo: app, locations: locations).findPaths()
-                            // Sum all related files; use the app bundle as minimum
-                            let total = paths.reduce(Int64(0)) { acc, url in
+            let caskApps = apps.filter { $0.isKnownApp }
+            let recalculated: [(UUID, Int64)] = await Task.detached(priority: .userInitiated) {
+                await withTaskGroup(of: (UUID, Int64).self) { group in
+                    for app in caskApps {
+                        group.addTask { [app] in
+                            guard let rawPaths = app.dbPaths else { return (app.id, app.size) }
+                            // Expand ~ and glob wildcards to real filesystem URLs
+                            let expandedURLs = [app.path] + rawPaths.flatMap { Glob.expand($0) }
+                            let total = expandedURLs.reduce(Int64(0)) { acc, url in
                                 acc + (FileSizeCalculator.size(of: url) ?? 0)
                             }
                             return (app.id, max(total, app.size))
@@ -81,7 +87,6 @@ final class AppState: ObservableObject {
                 }
             }.value
 
-            // Apply all size updates at once to avoid n individual publishes
             let sizeMap = Dictionary(uniqueKeysWithValues: recalculated)
             for i in self.installedApps.indices {
                 if let newSize = sizeMap[self.installedApps[i].id] {
@@ -92,19 +97,79 @@ final class AppState: ObservableObject {
         }
     }
 
+    /// Toggle heuristic selection for an Unknown app.
+    func toggleHeuristicSelection(for app: InstalledApp) {
+        guard let idx = installedApps.firstIndex(of: app) else { return }
+        installedApps[idx].selectedForHeuristic.toggle()
+    }
+
+    /// Run AppPathFinder heuristic scan for all Unknown apps that are
+    /// currently selected (selectedForHeuristic == true).
+    func scanSelectedWithHeuristic() {
+        guard !isHeuristicScanning else { return }
+        let selected = installedApps.filter { !$0.isKnownApp && $0.selectedForHeuristic }
+        guard !selected.isEmpty else { return }
+
+        isHeuristicScanning = true
+        Task {
+            let results: [(UUID, Int64, [URL])] = await Task.detached(priority: .userInitiated) {
+                let locations = Locations()
+                return await withTaskGroup(of: (UUID, Int64, [URL]).self) { group in
+                    for app in selected {
+                        group.addTask { [locations, app] in
+                            let paths = AppPathFinder(appInfo: app, locations: locations).findPaths()
+                            let total = paths.reduce(Int64(0)) { acc, url in
+                                acc + (FileSizeCalculator.size(of: url) ?? 0)
+                            }
+                            return (app.id, max(total, app.size), Array(paths))
+                        }
+                    }
+                    var results: [(UUID, Int64, [URL])] = []
+                    for await pair in group { results.append(pair) }
+                    return results
+                }
+            }.value
+
+            for i in self.installedApps.indices {
+                if let res = results.first(where: { $0.0 == self.installedApps[i].id }) {
+                    self.installedApps[i].size = res.1
+                    // Mark as scanned — clear selection after scan
+                    self.installedApps[i].selectedForHeuristic = false
+                }
+            }
+            
+            if selected.count == 1, let firstRes = results.first, let app = selected.first {
+                self.pendingUserDBApp = app
+                self.pendingUserDBPaths = firstRes.2
+            } else {
+                self.pendingUserDBApp = nil
+                self.pendingUserDBPaths = nil
+            }
+            
+            self.isHeuristicScanning = false
+        }
+    }
+
     func selectApp(_ app: InstalledApp?) {
         self.selectedApp = app
         self.selectedAppJunkPaths = []
 
-        if let app = app {
-            isScanningJunk = true
-            Task {
-                let paths = await Task.detached(priority: .userInitiated) {
+        guard let app = app else { return }
+        isScanningJunk = true
+
+        Task {
+            let paths: Set<URL>
+            if let rawPaths = app.dbPaths {
+                // Known app: resolve exact Cask paths via Glob (fast, no disk walk)
+                paths = Set([app.path] + rawPaths.flatMap { Glob.expand($0) })
+            } else {
+                // Unknown app: fall back to full heuristic scan
+                paths = await Task.detached(priority: .userInitiated) {
                     AppPathFinder(appInfo: app, locations: Locations()).findPaths()
                 }.value
-                self.selectedAppJunkPaths = Array(paths).sorted(by: { $0.path < $1.path })
-                self.isScanningJunk = false
             }
+            self.selectedAppJunkPaths = Array(paths).sorted(by: { $0.path < $1.path })
+            self.isScanningJunk = false
         }
     }
 

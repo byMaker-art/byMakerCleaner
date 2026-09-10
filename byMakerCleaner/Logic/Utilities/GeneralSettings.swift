@@ -32,7 +32,7 @@ final class GeneralSettings: ObservableObject {
     // MARK: - Shared suite
     // Both app targets read/write from the same App Group UserDefaults suite.
     // Suite ID must match the App Group registered in project.yml entitlements.
-    private static let suite = UserDefaults(suiteName: "com.bymaker.byMakerCleaner.shared")
+    nonisolated(unsafe) private static let suite = UserDefaults(suiteName: "com.bymaker.byMakerCleaner.shared")
         ?? UserDefaults.standard
 
     // MARK: - Published settings
@@ -45,7 +45,7 @@ final class GeneralSettings: ObservableObject {
 
     // MARK: - Singleton
 
-    static let shared = GeneralSettings()
+    nonisolated(unsafe) static let shared = GeneralSettings()
 
     private init() {
         let stored = GeneralSettings.suite.double(forKey: Keys.metricsInterval)

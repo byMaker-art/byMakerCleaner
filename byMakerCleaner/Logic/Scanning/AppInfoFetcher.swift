@@ -1,18 +1,31 @@
 import Foundation
 import AppKit
 
-struct InstalledApp: Identifiable, Hashable {
+struct InstalledApp: Identifiable, Hashable, @unchecked Sendable {
     let id: UUID
     let appName: String
     let bundleIdentifier: String
     let path: URL
     let icon: NSImage
     // Initially set to the .app bundle size only.
-    // AppState.loadInstalledApps() updates this asynchronously with the
-    // true total (app bundle + all related files found by AppPathFinder).
+    // For Cask-known apps, updated immediately via Glob.expand() on caskPaths.
+    // For unknown apps, updated only when user explicitly requests heuristic scan.
     var size: Int64
     let entitlements: [String]?
     let teamIdentifier: String?
+
+    // MARK: - Cask Database & User Database
+    /// true if this app was found in UserDatabase
+    var isUserDB: Bool = false
+    /// true if this app was found in CaskDatabase by appName.lowercased() or bundleID
+    var isKnownApp: Bool = false
+    /// Exact zap paths from DB (raw, with ~ and glob patterns). nil if unknown.
+    var dbPaths: [String]? = nil
+
+    // MARK: - Heuristic scan state
+    /// true if user has selected this app for heuristic scan (Unknown apps section)
+    var selectedForHeuristic: Bool = false
+
     var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
     }
@@ -26,8 +39,9 @@ struct InstalledApp: Identifiable, Hashable {
     }
 }
 
-final class AppInfoFetcher {
+final class AppInfoFetcher: @unchecked Sendable {
     static let shared = AppInfoFetcher()
+
     private let fileManager = FileManager.default
 
     private static let protectedBundleIDs: Set<String> = [
@@ -126,6 +140,27 @@ final class AppInfoFetcher {
 
         let size = appSize(at: url)
 
+        var isUserDB = false
+        var isKnownApp = false
+        var dbPaths: [String]? = nil
+
+        // 1. Check UserDatabase (highest priority)
+        if let userPaths = UserDatabase.shared.paths(for: bundleID) {
+            isUserDB = true
+            isKnownApp = true
+            dbPaths = userPaths
+        } 
+        // 2. Check CaskDatabase by Name (standard format, spaces preserved)
+        else if let paths = CaskDatabase.zapPaths[appName.lowercased()] {
+            isKnownApp = true
+            dbPaths = paths
+        }
+        // 3. Check CaskDatabase by Bundle ID (fallback for name mismatches like CopyClip)
+        else if let paths = CaskDatabase.bundleIDPaths[bundleID.lowercased()] {
+            isKnownApp = true
+            dbPaths = paths
+        }
+
         return InstalledApp(
             id: UUID(),
             appName: appName,
@@ -134,9 +169,13 @@ final class AppInfoFetcher {
             icon: icon,
             size: size,
             entitlements: nil,
-            teamIdentifier: nil
+            teamIdentifier: nil,
+            isUserDB: isUserDB,
+            isKnownApp: isKnownApp,
+            dbPaths: dbPaths
         )
     }
+
 
     private func appSize(at url: URL) -> Int64 {
         FileSizeCalculator.size(of: url) ?? 0

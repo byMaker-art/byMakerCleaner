@@ -10,7 +10,7 @@ import Foundation
 
 let home = FileManager.default.homeDirectoryForCurrentUser.path
 
-class Locations: ObservableObject {
+class Locations: ObservableObject, @unchecked Sendable {
 
     struct SearchCategory {
         let name: String

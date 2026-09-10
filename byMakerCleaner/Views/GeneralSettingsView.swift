@@ -46,14 +46,54 @@ struct GeneralSettingsView: View {
             Divider()
                 .padding(.vertical, 12)
 
-            // ── Future settings go here ──────────────────────────────
-            Text("More settings coming soon.")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            // ── Contribute ───────────────────────────────────────────────
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Contribute to Community")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text("Help improve app detection by sharing your saved app paths with Homebrew Cask.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Button(action: exportUserDatabase) {
+                    HStack {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("Export User Database")
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+                .background(Color.accentColor.opacity(0.12))
+                .foregroundColor(.accentColor)
+                .cornerRadius(6)
+                .padding(.top, 4)
+            }
 
             Spacer()
         }
         .padding(20)
-        .frame(minWidth: 360, minHeight: 260)
+        .frame(minWidth: 360, minHeight: 320)
+    }
+    
+    private func exportUserDatabase() {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let sourceURL = appSupport.appendingPathComponent("byMakerCleaner").appendingPathComponent("UserDatabase.json")
+        
+        let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
+        let destURL = desktop.appendingPathComponent("byMakerCleaner_UserDB_Export.json")
+        
+        try? FileManager.default.removeItem(at: destURL)
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: destURL)
+            NSWorkspace.shared.activateFileViewerSelecting([destURL])
+            
+            if let url = URL(string: "https://github.com/Homebrew/homebrew-cask/issues") {
+                NSWorkspace.shared.open(url)
+            }
+        } catch {
+            print("Export failed: \(error)")
+        }
     }
 }

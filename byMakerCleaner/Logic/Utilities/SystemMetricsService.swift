@@ -1,5 +1,5 @@
 import Foundation
-import Darwin
+@preconcurrency import Darwin
 import Combine
 
 // MARK: - Data models
