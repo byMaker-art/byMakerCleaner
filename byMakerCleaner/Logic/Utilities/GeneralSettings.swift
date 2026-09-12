@@ -8,6 +8,7 @@ final class GeneralSettings: ObservableObject {
 
     private enum Keys {
         static let metricsInterval = "metricsRefreshInterval"
+        static let caskUpdateFrequency = "caskUpdateFrequencyDays"
     }
 
     // MARK: - Supported interval options (seconds)
@@ -29,6 +30,22 @@ final class GeneralSettings: ObservableObject {
         }
     }
 
+    enum CaskUpdateFrequency: Int, CaseIterable {
+        case weekly = 7
+        case biweekly = 14
+        case monthly = 30
+        case disabled = 0
+        
+        var label: String {
+            switch self {
+            case .weekly: return "1 time a week"
+            case .biweekly: return "1 time in 2 weeks"
+            case .monthly: return "1 time a month"
+            case .disabled: return "Disabled"
+            }
+        }
+    }
+
     // MARK: - Shared suite
     // Both app targets read/write from the same App Group UserDefaults suite.
     // Suite ID must match the App Group registered in project.yml entitlements.
@@ -40,6 +57,12 @@ final class GeneralSettings: ObservableObject {
     @Published var metricsInterval: Double {
         didSet {
             GeneralSettings.suite.set(metricsInterval, forKey: Keys.metricsInterval)
+        }
+    }
+    
+    @Published var caskUpdateFrequency: CaskUpdateFrequency {
+        didSet {
+            GeneralSettings.suite.set(caskUpdateFrequency.rawValue, forKey: Keys.caskUpdateFrequency)
         }
     }
 
@@ -54,6 +77,16 @@ final class GeneralSettings: ObservableObject {
             metricsInterval = stored
         } else {
             metricsInterval = 2.0
+        }
+        
+        let storedFreq = GeneralSettings.suite.integer(forKey: Keys.caskUpdateFrequency)
+        if storedFreq == 0 && GeneralSettings.suite.object(forKey: Keys.caskUpdateFrequency) == nil {
+            // Default to biweekly
+            caskUpdateFrequency = .biweekly
+        } else if let freq = CaskUpdateFrequency(rawValue: storedFreq) {
+            caskUpdateFrequency = freq
+        } else {
+            caskUpdateFrequency = .biweekly
         }
     }
 

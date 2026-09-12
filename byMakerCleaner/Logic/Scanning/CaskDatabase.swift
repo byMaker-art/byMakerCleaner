@@ -10,9 +10,49 @@
 import Foundation
 
 /// A database of exact uninstallation paths provided by Homebrew Cask.
-enum CaskDatabase {
-    /// Maps normalized app name (lowercased) to an array of paths.
-    static let zapPaths: [String: [String]] = [
+final class CaskDatabase: @unchecked Sendable {
+    static let shared = CaskDatabase()
+    private let lock = NSLock()
+    
+    private(set) var zapPaths: [String: [String]]
+    private(set) var bundleIDPaths: [String: [String]]
+    
+    private init() {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let appDir = appSupport.appendingPathComponent("byMakerCleaner")
+        let fileURL = appDir.appendingPathComponent("ParsedCaskDB.json")
+        
+        if let data = try? Data(contentsOf: fileURL),
+           let parsed = try? JSONDecoder().decode(ParsedCaskDB.self, from: data) {
+            self.zapPaths = parsed.zapPaths
+            self.bundleIDPaths = parsed.bundleIDPaths
+        } else {
+            self.zapPaths = CaskDatabase.defaultZapPaths
+            self.bundleIDPaths = CaskDatabase.defaultBundleIDPaths
+        }
+    }
+    
+    func reload(from parsed: ParsedCaskDB) {
+        lock.lock()
+        self.zapPaths = parsed.zapPaths
+        self.bundleIDPaths = parsed.bundleIDPaths
+        lock.unlock()
+    }
+    
+    func getZapPaths(for name: String) -> [String]? {
+        lock.lock()
+        defer { lock.unlock() }
+        return zapPaths[name]
+    }
+    
+    func getBundleIDPaths(for bundleID: String) -> [String]? {
+        lock.lock()
+        defer { lock.unlock() }
+        return bundleIDPaths[bundleID]
+    }
+
+    /// Default maps from generated file
+    private static let defaultZapPaths: [String: [String]] = [
         "(deep) hiarcs chess explorer": ["~/Library/Preferences/com.hiarcs.Chess Explorer.plist"],
         ".net reactor": ["~/Library/Application Support/Eziriz/.NET Reactor", "~/Library/Preferences/dotNET_Reactor.plist"],
         ".net runtime": ["~/.nuget"],
@@ -5421,8 +5461,8 @@ enum CaskDatabase {
         "속 입력기": ["/private/var/db/receipts/com.kiding.inputmethod.sok.*", "~/Library/Application Scripts/com.kiding.inputmethod.sok", "~/Library/Containers/com.kiding.inputmethod.sok"],
     ]
 
-    /// Maps bundle identifier (lowercased) to an array of paths.
-    static let bundleIDPaths: [String: [String]] = [
+    /// Default Maps bundle identifier (lowercased) to an array of paths.
+    private static let defaultBundleIDPaths: [String: [String]] = [
         "/applications/samsungmagician.app": ["~/Library/Application Support/Samsung Magician", "~/Library/Application Support/Samsung/Samsung Magician", "~/Library/LaunchAgents/com.samsung.magicianapp.plist", "~/Library/LaunchAgents/com.samsung.magiciansvc.plist", "~/Library/Saved Application State/com.samsung.magician.*"],
         "85c27nk92c.com.flexibits.fantastical2.mac.helper": ["~/Library/Application Scripts/*.com.flexibits.fantastical*", "~/Library/Application Scripts/com.flexibits.fantastical*", "~/Library/Application Scripts/com.flexibits.fbcaldav.*", "~/Library/Containers/com.flexibits.fantastical*", "~/Library/Containers/com.flexibits.fbcaldav.*", "~/Library/Group Containers/*.com.flexibits.fantastical*.mac", "~/Library/Preferences/com.flexibits.fantastical.plist"],
         "86z3gcj4mf.com.noodlesoft.hazelhelper": ["~/Library/Application Support/Hazel", "~/Library/Caches/com.noodlesoft.HazelHelper", "~/Library/Logs/Hazel", "~/Library/Preferences/86Z3GCJ4MF.com.noodlesoft.HazelHelper.plist", "~/Library/Preferences/com.noodlesoft.Hazel.plist", "~/Library/Preferences/com.noodlesoft.HazelHelper.plist", "~/Library/Saved Application State/com.noodlesoft.Hazel.savedState"],

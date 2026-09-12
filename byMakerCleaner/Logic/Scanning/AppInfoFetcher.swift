@@ -151,12 +151,12 @@ final class AppInfoFetcher: @unchecked Sendable {
             dbPaths = userPaths
         } 
         // 2. Check CaskDatabase by Name (standard format, spaces preserved)
-        else if let paths = CaskDatabase.zapPaths[appName.lowercased()] {
+        else if let paths = CaskDatabase.shared.getZapPaths(for: appName.lowercased()) {
             isKnownApp = true
             dbPaths = paths
         }
         // 3. Check CaskDatabase by Bundle ID (fallback for name mismatches like CopyClip)
-        else if let paths = CaskDatabase.bundleIDPaths[bundleID.lowercased()] {
+        else if let paths = CaskDatabase.shared.getBundleIDPaths(for: bundleID.lowercased()) {
             isKnownApp = true
             dbPaths = paths
         }

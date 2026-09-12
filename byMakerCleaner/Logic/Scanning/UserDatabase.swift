@@ -70,4 +70,26 @@ final class UserDatabase: @unchecked Sendable {
         defer { lock.unlock() }
         return records[bundleID]?.paths
     }
+    
+    func migrateToCaskDB(caskZapPaths: [String: [String]], caskBundleIDPaths: [String: [String]]) {
+        lock.lock()
+        var currentRecords = records
+        var changed = false
+        
+        for (bundleID, record) in currentRecords {
+            let appNameKey = record.appName.lowercased()
+            if caskBundleIDPaths[bundleID.lowercased()] != nil || caskZapPaths[appNameKey] != nil {
+                currentRecords.removeValue(forKey: bundleID)
+                changed = true
+            }
+        }
+        
+        if changed {
+            records = currentRecords
+            if let encoded = try? JSONEncoder().encode(records) {
+                try? encoded.write(to: fileURL, options: .atomic)
+            }
+        }
+        lock.unlock()
+    }
 }

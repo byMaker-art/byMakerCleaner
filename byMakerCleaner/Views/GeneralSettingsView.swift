@@ -4,9 +4,11 @@ import SwiftUI
 /// GPU-safe: no animated pickers or native Toggle switches.
 struct GeneralSettingsView: View {
     @ObservedObject private var settings = GeneralSettings.shared
+    @StateObject private var caskUpdater = CaskDatabaseUpdater.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
             Text("General Settings")
                 .font(.headline)
                 .padding(.bottom, 12)
@@ -43,6 +45,94 @@ struct GeneralSettingsView: View {
                 .padding(.top, 4)
             }
 
+            Divider()
+                .padding(.vertical, 12)
+                
+            // ── Cask Database Update ───────────────────────────────────────
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Cask Database Update")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text("Frequency to check for new Cask DB updates.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    
+                let columnsFreq = [GridItem(.adaptive(minimum: 100))]
+                LazyVGrid(columns: columnsFreq, spacing: 6) {
+                    ForEach(GeneralSettings.CaskUpdateFrequency.allCases, id: \.self) { freq in
+                        let isSelected = settings.caskUpdateFrequency == freq
+                        Text(freq.label)
+                            .font(.caption)
+                            .fontWeight(isSelected ? .bold : .regular)
+                            .foregroundColor(isSelected ? .white : .primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 5)
+                            .background(isSelected ? Color.accentColor : Color(NSColor.controlBackgroundColor))
+                            .onTapGesture { settings.caskUpdateFrequency = freq }
+                    }
+                }
+                .padding(.top, 4)
+                
+                HStack(spacing: 12) {
+                    if case .updateAvailable(let etag) = caskUpdater.state {
+                        Button(action: {
+                            Task { await caskUpdater.downloadAndInstall(etag: etag) }
+                        }) {
+                            Text("Download and Install Cask DB")
+                                .font(.caption)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                        .background(Color.green.opacity(0.12))
+                        .foregroundColor(.green)
+                        .cornerRadius(6)
+                    } else {
+                        Button(action: {
+                            Task { await caskUpdater.checkUpdate() }
+                        }) {
+                            Text("Check Update Cask DB")
+                                .font(.caption)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                        .background(Color.accentColor.opacity(0.12))
+                        .foregroundColor(.accentColor)
+                        .cornerRadius(6)
+                        .disabled(caskUpdater.state == .checking || caskUpdater.state == .parsing)
+                    }
+                    
+                    // Status text
+                    switch caskUpdater.state {
+                    case .idle:
+                        if let lastCheck = UserDefaults.standard.object(forKey: "lastCaskCheckDate") as? Date {
+                            Text("Last checked: \(lastCheck.formatted(date: .abbreviated, time: .shortened))")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    case .checking:
+                        ProgressView().controlSize(.small)
+                        Text("Checking...").font(.caption2).foregroundColor(.secondary)
+                    case .updateAvailable:
+                        Text("New update available!").font(.caption2).foregroundColor(.green)
+                    case .upToDate:
+                        Text("Database is up to date.").font(.caption2).foregroundColor(.secondary)
+                    case .downloading:
+                        ProgressView().controlSize(.small)
+                        Text("Downloading...").font(.caption2).foregroundColor(.secondary)
+                    case .parsing:
+                        ProgressView().controlSize(.small)
+                        Text("Installing...").font(.caption2).foregroundColor(.secondary)
+                    case .success:
+                        Text("Successfully updated!").font(.caption2).foregroundColor(.green)
+                    case .error(let msg):
+                        Text("Error: \(msg)").font(.caption2).foregroundColor(.red)
+                    }
+                }
+                .padding(.top, 8)
+            }
+            
             Divider()
                 .padding(.vertical, 12)
 
@@ -85,7 +175,8 @@ struct GeneralSettingsView: View {
             Spacer()
         }
         .padding(20)
-        .frame(minWidth: 380, minHeight: 340)
+        }
+        .frame(minWidth: 420, minHeight: 440)
     }
     
     private func exportUserDatabase() {
