@@ -47,7 +47,7 @@ struct GeneralSettingsView: View {
                 .padding(.vertical, 12)
 
             // ── Contribute ───────────────────────────────────────────────
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Contribute to Community")
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -55,43 +55,57 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                Button(action: exportUserDatabase) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Export User Database")
+                HStack(spacing: 12) {
+                    Button(action: exportUserDatabase) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("Export Database")
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
                     }
-                    .font(.caption)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .buttonStyle(.plain)
+                    .background(Color.accentColor.opacity(0.12))
+                    .foregroundColor(.accentColor)
+                    .cornerRadius(6)
+
+                    Link("How to submit?", destination: URL(string: "https://github.com/Homebrew/homebrew-cask/issues")!)
+                        .font(.caption)
+                        .foregroundColor(.blue)
                 }
-                .buttonStyle(.plain)
-                .background(Color.accentColor.opacity(0.12))
-                .foregroundColor(.accentColor)
-                .cornerRadius(6)
                 .padding(.top, 4)
+
+                Text("1. Export the file to your Downloads folder.\n2. Open the link above and create a new issue or pull request.\n3. Attach your exported JSON file.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
             }
 
             Spacer()
         }
         .padding(20)
-        .frame(minWidth: 360, minHeight: 320)
+        .frame(minWidth: 380, minHeight: 340)
     }
     
     private func exportUserDatabase() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let sourceURL = appSupport.appendingPathComponent("byMakerCleaner").appendingPathComponent("UserDatabase.json")
         
-        let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
-        let destURL = desktop.appendingPathComponent("byMakerCleaner_UserDB_Export.json")
+        guard FileManager.default.fileExists(atPath: sourceURL.path) else { return }
+        
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: Date())
+        
+        let destURL = downloads.appendingPathComponent("byMakerCleaner_UserDB_\(dateString).json")
         
         try? FileManager.default.removeItem(at: destURL)
         do {
             try FileManager.default.copyItem(at: sourceURL, to: destURL)
             NSWorkspace.shared.activateFileViewerSelecting([destURL])
-            
-            if let url = URL(string: "https://github.com/Homebrew/homebrew-cask/issues") {
-                NSWorkspace.shared.open(url)
-            }
         } catch {
             print("Export failed: \(error)")
         }
