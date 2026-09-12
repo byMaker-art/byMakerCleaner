@@ -90,7 +90,7 @@ class AppPathFinder: @unchecked Sendable {
         collectionSet.insert(appInfo.path)
         
         // 1. Cask Database Fast-Path (Exact known paths)
-        if let caskPaths = CaskDatabase.zapPaths[normalizedAppName] {
+        if let caskPaths = CaskDatabase.shared.getZapPaths(for: normalizedAppName) {
             let expandedURLs = caskPaths.flatMap { Glob.expand($0) }
             collectionSet.formUnion(expandedURLs)
             
@@ -120,7 +120,7 @@ class AppPathFinder: @unchecked Sendable {
         collectionSet.insert(appInfo.path)
         
         // 1. Cask Database Fast-Path
-        if let caskPaths = CaskDatabase.zapPaths[normalizedAppName] {
+        if let caskPaths = CaskDatabase.shared.getZapPaths(for: normalizedAppName) {
             DispatchQueue.global(qos: .userInitiated).async {
                 let expandedURLs = caskPaths.flatMap { Glob.expand($0) }
                 self.collectionQueue.sync {
