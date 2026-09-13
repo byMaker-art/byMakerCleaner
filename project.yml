@@ -22,7 +22,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bymaker.byMakerCleaner
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "" # Set this in Xcode if needed
-        MARKETING_VERSION: 1.1.2
-        CURRENT_PROJECT_VERSION: 3
+        MARKETING_VERSION: 1.2.0
+        CURRENT_PROJECT_VERSION: 4
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: 6.0
