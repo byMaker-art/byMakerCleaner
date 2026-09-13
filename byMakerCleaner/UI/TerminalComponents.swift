@@ -19,7 +19,7 @@ struct TerminalCard<Content: View>: View {
             
             // Content
             VStack(alignment: .leading, spacing: 12) {
-                if let title = title {
+                if title != nil {
                     // Spacer for title
                     Text(" ")
                         .font(Theme.font(size: 14))

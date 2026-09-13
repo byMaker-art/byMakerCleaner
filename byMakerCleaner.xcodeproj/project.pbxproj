@@ -94,6 +94,7 @@
 		D6453ED353ECFEDA36A7FDE3 /* LanguageFilesScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageFilesScanner.swift; sourceTree = "<group>"; };
 		DC59DCA95C63225FE4910B18 /* AppPathFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPathFinder.swift; sourceTree = "<group>"; };
 		DC7538BD8616FA99056CAD3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DED6C61B30572869000985B4 /* Assets 2.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets 2.xcassets"; sourceTree = "<group>"; };
 		E17680A5237B9A4E09A53B81 /* MaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceView.swift; sourceTree = "<group>"; };
 		E28D63B6C329EF4839B2D152 /* AppListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppListView.swift; sourceTree = "<group>"; };
 		F37E15A5132E94F716DEFD91 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
@@ -118,6 +119,7 @@
 				F9DCFE4D66BB757664F16D92 /* Models */,
 				283F62916C7A3967F93E79D6 /* ViewModels */,
 				D30DB3E1E65D8A6536A64010 /* Views */,
+				DED6C61B30572869000985B4 /* Assets 2.xcassets */,
 			);
 			path = byMakerCleaner;
 			sourceTree = "<group>";

@@ -28,7 +28,7 @@ enum Glob {
         if result == 0 {
             var urls: [URL] = []
             for i in 0..<Int(gt.gl_pathc) {
-                if let path = String(validatingUTF8: gt.gl_pathv[i]!) {
+                if let path = String(validatingCString: gt.gl_pathv[i]!) {
                     // Remove trailing slash if GLOB_MARK added it
                     var cleanPath = path
                     if cleanPath.hasSuffix("/") && cleanPath.count > 1 {
