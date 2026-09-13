@@ -3,6 +3,7 @@ import SwiftUI
 /// Main window — tab bar with Smart Scan and App Uninstaller.
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var healthService: HealthService
     @State private var selectedTab: Int = 0
 
     var body: some View {
@@ -19,7 +20,10 @@ struct ContentView: View {
                     tabLabel(title: "📱 App Uninstaller", tag: 1)
                     tabLabel(title: "⚙️ Login Items", tag: 2)
                     tabLabel(title: "🔍 Orphan Finder", tag: 3)
+                    tabLabel(title: "🛠 Maintenance", tag: 4)
                     Spacer()
+                    HealthGaugeView(score: healthService.score)
+                        .padding(.trailing, 16)
                 }
                 .background(Color(NSColor.windowBackgroundColor))
 
@@ -35,8 +39,10 @@ struct ContentView: View {
                             .environmentObject(appState)
                     } else if selectedTab == 2 {
                         LoginItemsView()
-                    } else {
+                    } else if selectedTab == 3 {
                         OrphanFinderView()
+                    } else {
+                        MaintenanceView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

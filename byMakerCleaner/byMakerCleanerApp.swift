@@ -11,6 +11,8 @@ struct byMakerCleanerApp: App {
 
     @StateObject private var appState = AppState()
     @StateObject private var metricsService = SystemMetricsService()
+    @StateObject private var bluetoothService = BluetoothService()
+    @StateObject private var healthService = HealthService()
     // GeneralSettings is a singleton — use the shared instance directly
     private let settings = GeneralSettings.shared
 
@@ -22,6 +24,10 @@ struct byMakerCleanerApp: App {
         Window("byMaker Cleaner", id: "main") {
             ContentView()
                 .environmentObject(appState)
+                .environmentObject(healthService)
+                .onAppear {
+                    CaskDatabaseUpdater.shared.checkAgeAndNotifyIfNeeded()
+                }
                 .onOpenURL { url in
                     // Handle bymakercleaner://settings deep-link (future use / Shortcuts)
                     if url.host == "settings" {
@@ -34,6 +40,8 @@ struct byMakerCleanerApp: App {
         MenuBarExtra {
             MenuBarPopoverView()
                 .environmentObject(metricsService)
+                .environmentObject(bluetoothService)
+                .environmentObject(healthService)
                 .environmentObject(settings)
                 .onAppear {
                     metricsService.start()

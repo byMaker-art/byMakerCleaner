@@ -17,12 +17,13 @@ targets:
         NSPrincipalClass: NSApplication
         LSMinimumSystemVersion: 13.0.0
         LSUIElement: false
+        NSBluetoothAlwaysUsageDescription: "byMakerCleaner requires Bluetooth access to monitor the connection status of your paired devices."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bymaker.byMakerCleaner
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "" # Set this in Xcode if needed
-        MARKETING_VERSION: 1.1.2
-        CURRENT_PROJECT_VERSION: 3
+        MARKETING_VERSION: 1.2.0
+        CURRENT_PROJECT_VERSION: 4
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: 6.0

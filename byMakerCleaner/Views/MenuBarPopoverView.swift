@@ -5,6 +5,8 @@ import SwiftUI
 /// Note: Settings button now works natively (same process as main app).
 struct MenuBarPopoverView: View {
     @EnvironmentObject var metricsService: SystemMetricsService
+    @EnvironmentObject var bluetoothService: BluetoothService
+    @EnvironmentObject var healthService: HealthService
     @Environment(\.openWindow) private var openWindow
 
     private var m: SystemMetrics { metricsService.metrics }
@@ -13,7 +15,15 @@ struct MenuBarPopoverView: View {
         VStack(alignment: .leading, spacing: 0) {
             headerRow
             Divider().padding(.vertical, 4)
+            HealthGaugeView(score: healthService.score)
+            Divider().padding(.vertical, 4)
             metricSection
+            Divider().padding(.vertical, 4)
+            actionSection
+            if !bluetoothService.pairedDevices.isEmpty {
+                Divider().padding(.vertical, 4)
+                bluetoothSection
+            }
             Divider().padding(.vertical, 4)
             footerRow
         }
@@ -120,6 +130,61 @@ struct MenuBarPopoverView: View {
                     Text(m.formattedSpeed(m.netDownBytesPerSec))
                         .font(.caption)
                         .monospacedDigit()
+                }
+            }
+        }
+    }
+
+    // MARK: - Actions
+    
+    private var actionSection: some View {
+        HStack(spacing: 12) {
+            Text("🧹 Free RAM")
+                .font(.caption)
+                .foregroundColor(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.blue)
+                .cornerRadius(4)
+                .onTapGesture {
+                    // Triggers maintenance RAM cleaning
+                    Task { await MaintenanceEngine.shared.freeUpRAM() }
+                }
+            
+            Spacer()
+            
+            Text("📸 Screenshot")
+                .font(.caption)
+                .foregroundColor(.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.secondary.opacity(0.2))
+                .cornerRadius(4)
+                .onTapGesture {
+                    ScreenshotService.shared.captureInteractiveToClipboard()
+                }
+        }
+    }
+    
+    // MARK: - Bluetooth
+    
+    private var bluetoothSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Bluetooth")
+                    .font(.subheadline).bold()
+                Spacer()
+            }
+            ForEach(bluetoothService.pairedDevices) { device in
+                HStack {
+                    Text(device.name)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer()
+                    Text(device.isConnected ? "●" : "○")
+                        .foregroundColor(device.isConnected ? .green : .secondary)
+                        .font(.caption)
                 }
             }
         }
