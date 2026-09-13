@@ -22,6 +22,8 @@
 	<string>13.0.0</string>
 	<key>LSUIElement</key>
 	<false/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>byMakerCleaner requires Bluetooth access to monitor the connection status of your paired devices.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

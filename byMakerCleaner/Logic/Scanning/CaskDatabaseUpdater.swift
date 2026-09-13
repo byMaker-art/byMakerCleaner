@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UserNotifications
 
 struct ParsedCaskDB: Codable {
     let zapPaths: [String: [String]]
@@ -184,5 +185,28 @@ final class CaskDatabaseUpdater: ObservableObject {
     
     private func migrateUserDB(parsedDB: ParsedCaskDB) {
         UserDatabase.shared.migrateToCaskDB(caskZapPaths: parsedDB.zapPaths, caskBundleIDPaths: parsedDB.bundleIDPaths)
+    }
+    
+    func checkAgeAndNotifyIfNeeded() {
+        let freq = GeneralSettings.shared.caskUpdateFrequency
+        guard freq != .disabled else { return }
+        
+        let lastCheckDate = UserDefaults.standard.object(forKey: "lastCaskCheckDate") as? Date ?? Date.distantPast
+        let daysSince = Calendar.current.dateComponents([.day], from: lastCheckDate, to: Date()).day ?? 0
+        
+        if daysSince >= freq.rawValue {
+            Task {
+                let granted = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+                if granted == true {
+                    let content = UNMutableNotificationContent()
+                    content.title = "Cask Database Outdated"
+                    content.body = "Your Homebrew Cask database hasn't been updated in \(daysSince) days. Please open settings to update."
+                    content.sound = .default
+                    
+                    let request = UNNotificationRequest(identifier: "CaskDBUpdate", content: content, trigger: nil)
+                    try? await UNUserNotificationCenter.current().add(request)
+                }
+            }
+        }
     }
 }

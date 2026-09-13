@@ -292,6 +292,7 @@ final class AppState: ObservableObject {
                 }
             }
             await MainActor.run {
+                UserDefaults.standard.set(Date(), forKey: "lastCleanDate")
                 self.categoryResults = []
                 self.scanState = .cleanDone(freedBytes: totalBytes, hasTrashItems: hasTrashItems)
             }
