@@ -38,10 +38,10 @@ final class GeneralSettings: ObservableObject {
         
         var label: String {
             switch self {
-            case .weekly: return "1 time a week"
-            case .biweekly: return "1 time in 2 weeks"
-            case .monthly: return "1 time a month"
-            case .disabled: return "Disabled"
+            case .weekly: return "1/WEEK"
+            case .biweekly: return "1/2 WEEKS"
+            case .monthly: return "1/MONTH"
+            case .disabled: return "DISABLED"
             }
         }
     }

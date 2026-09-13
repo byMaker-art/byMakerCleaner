@@ -25,8 +25,10 @@ struct byMakerCleanerApp: App {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(healthService)
+                .environmentObject(metricsService)
                 .background(Theme.background)
                 .onAppear {
+                    metricsService.start()
                     CaskDatabaseUpdater.shared.checkAgeAndNotifyIfNeeded()
                 }
                 .onOpenURL { url in

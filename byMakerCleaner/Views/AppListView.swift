@@ -5,6 +5,10 @@ import SwiftUI
 /// GPU-safe: Text + .onTapGesture only.
 struct AppListView: View {
     @EnvironmentObject var appState: AppState
+    
+    @State private var isUserVerifiedExpanded = true
+    @State private var isVerifiedExpanded = true
+    @State private var isUnknownExpanded = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -138,17 +142,22 @@ struct AppListView: View {
                 // ── SECTION 1: User Verified Apps ───────────────────────────
                 if !userApps.isEmpty {
                     Section {
-                        ForEach(userApps) { app in
-                            verifiedAppRow(app, isUser: true)
-                                .listRowBackground(Theme.background)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                .contentShape(Rectangle())
-                                .onTapGesture { appState.selectApp(app) }
+                        if isUserVerifiedExpanded {
+                            ForEach(userApps) { app in
+                                verifiedAppRow(app, isUser: true)
+                                    .listRowBackground(Theme.background)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { appState.selectApp(app) }
+                            }
                         }
                     } header: {
                         HStack {
-                            Text("[+] USER VERIFIED")
+                            Text(isUserVerifiedExpanded ? "[-]" : "[+]")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("USER VERIFIED")
                                 .font(Theme.font(size: 12, weight: .bold))
                                 .foregroundColor(Theme.textPrimary)
                             Text("— SAVED BY YOU")
@@ -160,23 +169,30 @@ struct AppListView: View {
                                 .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onTapGesture { isUserVerifiedExpanded.toggle() }
                     }
                 }
 
                 // ── SECTION 2: Verified Apps (Cask DB) ──────────────────
                 if !knownApps.isEmpty {
                     Section {
-                        ForEach(knownApps) { app in
-                            verifiedAppRow(app, isUser: false)
-                                .listRowBackground(Theme.background)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                                .contentShape(Rectangle())
-                                .onTapGesture { appState.selectApp(app) }
+                        if isVerifiedExpanded {
+                            ForEach(knownApps) { app in
+                                verifiedAppRow(app, isUser: false)
+                                    .listRowBackground(Theme.background)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { appState.selectApp(app) }
+                            }
                         }
                     } header: {
                         HStack {
-                            Text("[+] VERIFIED APPS")
+                            Text(isVerifiedExpanded ? "[-]" : "[+]")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("VERIFIED APPS")
                                 .font(Theme.font(size: 12, weight: .bold))
                                 .foregroundColor(Theme.textPrimary)
                             Text("— EXACT PATHS FROM HOMEBREW CASK DB")
@@ -188,21 +204,28 @@ struct AppListView: View {
                                 .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onTapGesture { isVerifiedExpanded.toggle() }
                     }
                 }
 
                 // ── SECTION 3: Unknown Apps (needs heuristic) ────────────
                 if !unknownApps.isEmpty {
                     Section {
-                        ForEach(unknownApps) { app in
-                            unknownAppRow(app)
-                                .listRowBackground(Theme.background)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        if isUnknownExpanded {
+                            ForEach(unknownApps) { app in
+                                unknownAppRow(app)
+                                    .listRowBackground(Theme.background)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            }
                         }
                     } header: {
                         HStack {
-                            Text("[!] UNKNOWN APPS")
+                            Text(isUnknownExpanded ? "[-]" : "[+]")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.accent)
+                            Text("UNKNOWN APPS")
                                 .font(Theme.font(size: 12, weight: .bold))
                                 .foregroundColor(Theme.accent)
                             Text("— NOT IN CASK DB")
@@ -229,6 +252,8 @@ struct AppListView: View {
                                 .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .onTapGesture { isUnknownExpanded.toggle() }
                     }
                 }
             }
@@ -333,7 +358,7 @@ struct AppListView: View {
             Text(app.selectedForHeuristic ? "[X]" : "[ ]")
                 .font(Theme.font(size: 14))
                 .foregroundColor(app.selectedForHeuristic ? Theme.accent : Theme.textMuted)
-                .frame(width: 24)
+                .fixedSize()
                 .onTapGesture { appState.toggleHeuristicSelection(for: app) }
 
             Image(nsImage: app.icon)

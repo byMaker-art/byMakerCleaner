@@ -9,21 +9,30 @@ struct MenuBarPopoverView: View {
     @EnvironmentObject var healthService: HealthService
     @Environment(\.openWindow) private var openWindow
 
+    @State private var showAllBluetooth = false
+
     private var m: SystemMetrics { metricsService.metrics }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerRow
             Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
-            HealthGaugeView(score: healthService.score) // Assuming this is also restyled or fits
+            
+            HealthGaugeView(score: healthService.score)
+            
             Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
+            
             metricSection
+            
             Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
+            
             actionSection
+            
             if !bluetoothService.pairedDevices.isEmpty {
                 Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
                 bluetoothSection
             }
+            
             Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
             footerRow
         }
@@ -52,29 +61,57 @@ struct MenuBarPopoverView: View {
     // MARK: - Metrics
 
     private var metricSection: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             metricRow(
                 icon: "💻",
                 label: "CPU",
-                value: "\(m.cpuPercent)%",
+                value: "",
                 barValue: m.cpuUsage,
                 barColor: barColor(for: m.cpuUsage)
             )
-            metricRow(
-                icon: "🧠",
-                label: "RAM",
-                value: "\(m.formatted(bytes: m.ramUsed)) / \(m.formatted(bytes: m.ramTotal))",
-                barValue: m.ramPercent,
-                barColor: barColor(for: m.ramPercent)
-            )
+            
+            ramMetricRow
+            
             metricRow(
                 icon: "💾",
-                label: "Disk",
-                value: "\(m.formatted(bytes: m.diskFree)) free",
+                label: "DISK",
+                value: "\(m.formatted(bytes: m.diskFree)) FREE",
                 barValue: m.diskPercent,
                 barColor: barColor(for: m.diskPercent)
             )
+            
             networkRow
+        }
+    }
+
+    private var ramMetricRow: some View {
+        VStack(spacing: 4) {
+            HStack {
+                Text("🧠")
+                Text("RAM")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+                Text("\(m.formatted(bytes: m.ramUsed)) / \(m.formatted(bytes: m.ramTotal))")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
+                
+                Text("[ FREE ]")
+                    .font(Theme.font(size: 10, weight: .bold))
+                    .foregroundColor(Theme.background)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Theme.accent)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        Task { await MaintenanceEngine.shared.freeUpRAM() }
+                    }
+            }
+            
+            HStack {
+                TerminalProgress(value: m.ramPercent, totalLength: 22, color: barColor(for: m.ramPercent))
+                Spacer()
+            }
         }
     }
 
@@ -96,7 +133,10 @@ struct MenuBarPopoverView: View {
                     .font(Theme.font(size: 10))
                     .foregroundColor(Theme.textMuted)
             }
-            TerminalBarChart(items: [BarChartItem(label: "", value: barValue, color: barColor)], height: 6)
+            HStack {
+                TerminalProgress(value: barValue, totalLength: 22, color: barColor)
+                Spacer()
+            }
         }
     }
 
@@ -131,22 +171,12 @@ struct MenuBarPopoverView: View {
     // MARK: - Actions
     
     private var actionSection: some View {
-        HStack(spacing: 12) {
-            Text("[ FREE RAM ]")
-                .font(Theme.font(size: 10, weight: .bold))
-                .foregroundColor(Theme.accent)
-                .onTapGesture {
-                    Task { await MaintenanceEngine.shared.freeUpRAM() }
-                }
-            
+        HStack {
             Spacer()
-            
-            Text("[ SCREENSHOT ]")
-                .font(Theme.font(size: 10, weight: .bold))
-                .foregroundColor(Theme.textPrimary)
-                .onTapGesture {
-                    ScreenshotService.shared.captureInteractiveToClipboard()
-                }
+            TerminalButton("SCREENSHOT", icon: "camera") {
+                ScreenshotService.shared.captureInteractiveToClipboard()
+            }
+            Spacer()
         }
     }
     
@@ -155,22 +185,38 @@ struct MenuBarPopoverView: View {
     private var bluetoothSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                Text(showAllBluetooth ? "[-]" : "[+]")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                 Text("BLUETOOTH")
                     .font(Theme.font(size: 12, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
             }
-            ForEach(bluetoothService.pairedDevices) { device in
-                HStack {
-                    Text(device.name.uppercased())
-                        .font(Theme.font(size: 10))
-                        .foregroundColor(Theme.textPrimary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    Spacer()
-                    Text(device.isConnected ? "[ON]" : "[OFF]")
-                        .foregroundColor(device.isConnected ? Theme.success : Theme.textMuted)
-                        .font(Theme.font(size: 10, weight: .bold))
+            .contentShape(Rectangle())
+            .onTapGesture {
+                showAllBluetooth.toggle()
+            }
+            
+            let devices = showAllBluetooth ? bluetoothService.pairedDevices : bluetoothService.pairedDevices.filter { $0.isConnected }
+            
+            if devices.isEmpty && !showAllBluetooth {
+                Text("NO ACTIVE DEVICES")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
+            } else {
+                ForEach(devices) { device in
+                    HStack {
+                        Text(device.name.uppercased())
+                            .font(Theme.font(size: 10))
+                            .foregroundColor(Theme.textPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer()
+                        Text(device.isConnected ? "[ON]" : "[OFF]")
+                            .foregroundColor(device.isConnected ? Theme.success : Theme.textMuted)
+                            .font(Theme.font(size: 10, weight: .bold))
+                    }
                 }
             }
         }
@@ -205,7 +251,7 @@ struct MenuBarPopoverView: View {
         }
     }
 
-    // MARK: - Actions
+    // MARK: - Helpers
 
     private func barColor(for value: Double) -> Color {
         switch value {
@@ -224,8 +270,6 @@ struct MenuBarPopoverView: View {
 
 // MARK: - Settings Opener (macOS 14+)
 
-/// Separate view so SettingsLink can be used.
-/// This avoids the "Please use SettingsLink" runtime error on macOS 14+.
 @available(macOS 14.0, *)
 private struct SettingsOpenerLabel: View {
     var body: some View {
@@ -237,4 +281,3 @@ private struct SettingsOpenerLabel: View {
         .buttonStyle(.plain)
     }
 }
-

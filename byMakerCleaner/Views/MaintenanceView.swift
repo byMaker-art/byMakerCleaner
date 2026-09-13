@@ -1,9 +1,19 @@
 import SwiftUI
 
 struct MaintenanceView: View {
+    @EnvironmentObject var metricsService: SystemMetricsService
+    
     @State private var isRunningRAM = false
     @State private var isRunningDNS = false
     @State private var resultMessage: String?
+    
+    private var ramInfographic: String {
+        let percent = metricsService.metrics.ramPercent
+        let totalBlocks = 20
+        let filledBlocks = max(0, min(totalBlocks, Int(round(percent * Double(totalBlocks)))))
+        let emptyBlocks = totalBlocks - filledBlocks
+        return String(repeating: "█", count: filledBlocks) + String(repeating: "░", count: emptyBlocks)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -45,12 +55,22 @@ struct MaintenanceView: View {
                             Text("FORCES INACTIVE MEMORY TO BE FREED UP.")
                                 .font(Theme.font(size: 10))
                                 .foregroundColor(Theme.textMuted)
+                            
+                            HStack(spacing: 4) {
+                                Text("[\(ramInfographic)]")
+                                    .font(Theme.font(size: 12))
+                                    .foregroundColor(Theme.accent)
+                                Text("\(Int(metricsService.metrics.ramPercent * 100))%")
+                                    .font(Theme.font(size: 12, weight: .bold))
+                                    .foregroundColor(Theme.accent)
+                            }
+                            .padding(.top, 4)
                         }
                         Spacer()
                         
                         if isRunningRAM {
-                            Text("[████░░░░]")
-                                .font(Theme.font(size: 14))
+                            Text("[ EXECUTING... ]")
+                                .font(Theme.font(size: 14, weight: .bold))
                                 .foregroundColor(Theme.accent)
                         } else {
                             TerminalButton("EXECUTE", icon: "cpu") {
@@ -62,9 +82,9 @@ struct MaintenanceView: View {
                 
                 TerminalCard(title: "NETWORK OPTIMIZATION") {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text("FLUSH DNS CACHE")
-                                .font(Theme.font(size: 14, weight: .bold))
+                                .font(Theme.font(size: 12, weight: .bold))
                                 .foregroundColor(Theme.textPrimary)
                             Text("RESOLVES NETWORK CONNECTION PROBLEMS.")
                                 .font(Theme.font(size: 10))
@@ -73,8 +93,8 @@ struct MaintenanceView: View {
                         Spacer()
                         
                         if isRunningDNS {
-                            Text("[████░░░░]")
-                                .font(Theme.font(size: 14))
+                            Text("[ EXECUTING... ]")
+                                .font(Theme.font(size: 12, weight: .bold))
                                 .foregroundColor(Theme.accent)
                         } else {
                             TerminalButton("EXECUTE", icon: "network") {

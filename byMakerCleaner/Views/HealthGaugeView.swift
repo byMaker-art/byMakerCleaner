@@ -4,16 +4,21 @@ struct HealthGaugeView: View {
     let score: Int
     
     var body: some View {
-        HStack(spacing: 8) {
-            Text("Health:")
-                .font(.subheadline)
-                .bold()
+        HStack(spacing: 4) {
+            Text("HEALTH:")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
             
-            Text("[\(barString)] \(score)%")
-                .font(.body)
-                .monospaced()
+            Text("[\(barString)]")
+                .font(Theme.font(size: 10))
+                .foregroundColor(colorForScore)
+            
+            Text("\(score)%")
+                .font(Theme.font(size: 10, weight: .bold))
                 .foregroundColor(colorForScore)
         }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8) // Ensure it scales down if needed
     }
     
     private var barString: String {
@@ -26,11 +31,11 @@ struct HealthGaugeView: View {
     
     private var colorForScore: Color {
         if score >= 80 {
-            return .green
+            return Theme.success
         } else if score >= 40 {
-            return .yellow
+            return Theme.warning
         } else {
-            return .red
+            return Theme.destructive
         }
     }
 }
