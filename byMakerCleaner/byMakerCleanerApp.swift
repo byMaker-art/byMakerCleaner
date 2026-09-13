@@ -31,14 +31,11 @@ struct byMakerCleanerApp: App {
                     metricsService.start()
                     CaskDatabaseUpdater.shared.checkAgeAndNotifyIfNeeded()
                 }
-                .onOpenURL { url in
-                    // Handle bymakercleaner://settings deep-link (future use / Shortcuts)
-                    if url.host == "settings" {
-                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                    }
-                }
         }
         .windowStyle(.hiddenTitleBar)
+        .commands {
+            AppCommands()
+        }
 
         // ── Menu Bar Tray Widget (merged from Helper) ─────────────────────
         MenuBarExtra {
@@ -65,10 +62,72 @@ struct byMakerCleanerApp: App {
         .menuBarExtraStyle(.window)
 
         // ── Settings window (Cmd+,) ──────────────────────────────────────
-        Settings {
+        Window("byMakerCleaner Settings", id: "settings") {
             GeneralSettingsView()
                 .background(Theme.background)
         }
         .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentMinSize)
+
+        // ── About window ─────────────────────────────────────────────────
+        Window("About byMaker Cleaner", id: "about") {
+            AboutView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+    }
+}
+
+struct AppCommands: Commands {
+    @Environment(\.openWindow) var openWindow
+
+    var body: some Commands {
+        CommandGroup(replacing: .appSettings) {
+            Button("Settings...") {
+                openWindow(id: "settings")
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
+        CommandGroup(replacing: .appInfo) {
+            Button("About byMaker Cleaner") {
+                openWindow(id: "about")
+            }
+        }
+    }
+}
+import SwiftUI
+
+struct AboutView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            Image("AppIcon") // Or a custom symbol
+                .resizable()
+                .frame(width: 80, height: 80)
+            
+            VStack(spacing: 4) {
+                Text("[ BYMAKER CLEANER ]")
+                    .font(Theme.font(size: 18, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                
+                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                    Text("VERSION \(version)")
+                        .font(Theme.font(size: 12))
+                        .foregroundColor(Theme.textPrimary)
+                }
+            }
+            
+            Text("A RETRO-FUTURISTIC MACOS MAINTENANCE TOOL.")
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
+                .multilineTextAlignment(.center)
+            
+            Text("© \(Calendar.current.component(.year, from: Date())) BYMAKER. ALL RIGHTS RESERVED.")
+                .font(Theme.font(size: 9))
+                .foregroundColor(Theme.textMuted)
+                .padding(.top, 10)
+        }
+        .padding(30)
+        .frame(width: 320)
+        .background(Theme.background)
     }
 }

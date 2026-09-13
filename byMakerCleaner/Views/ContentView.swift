@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var healthService: HealthService
+    @Environment(\.openWindow) var openWindow
     @State private var selectedTab: Int = 0
 
     var body: some View {
@@ -67,6 +68,11 @@ struct ContentView: View {
             }
             .frame(minWidth: 740, minHeight: 540)
             .background(Theme.background)
+            .onOpenURL { url in
+                if url.host == "settings" {
+                    openWindow(id: "settings")
+                }
+            }
         }
     }
 
