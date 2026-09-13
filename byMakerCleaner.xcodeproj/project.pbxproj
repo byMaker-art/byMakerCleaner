@@ -39,6 +39,7 @@
 		BE559559D3959A38C16D9D64 /* OrphanFinderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC17A07EEB68CFB6D6CDF32 /* OrphanFinderViewModel.swift */; };
 		CAF9FD047FF88EFA64682D84 /* AppDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5E1CAA46FD6DB9AF2C7B81 /* AppDetailView.swift */; };
 		CD5864DF5F11794A76717794 /* MaintenanceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0083C63FEF8BEDC90EA1F209 /* MaintenanceEngine.swift */; };
+		D518C701A67D3594024A6EE3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E9F041050BE32B0905DB8425 /* Assets.xcassets */; };
 		D565A3B2880A69260F37FFA8 /* UserDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0297BB822DD5D6DE0DF55BC5 /* UserDatabase.swift */; };
 		DA538E13D20BB412C6000DD5 /* MaintenanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17680A5237B9A4E09A53B81 /* MaintenanceView.swift */; };
 		DEA6C88C20970F9C4A329503 /* SystemScanEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10C83544B8304336EC230C1 /* SystemScanEngine.swift */; };
@@ -94,9 +95,9 @@
 		D6453ED353ECFEDA36A7FDE3 /* LanguageFilesScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageFilesScanner.swift; sourceTree = "<group>"; };
 		DC59DCA95C63225FE4910B18 /* AppPathFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPathFinder.swift; sourceTree = "<group>"; };
 		DC7538BD8616FA99056CAD3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		DED6C61B30572869000985B4 /* Assets 2.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets 2.xcassets"; sourceTree = "<group>"; };
 		E17680A5237B9A4E09A53B81 /* MaintenanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceView.swift; sourceTree = "<group>"; };
 		E28D63B6C329EF4839B2D152 /* AppListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppListView.swift; sourceTree = "<group>"; };
+		E9F041050BE32B0905DB8425 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F37E15A5132E94F716DEFD91 /* MenuBarPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarPopoverView.swift; sourceTree = "<group>"; };
 		FD4D9F2880F83BF4B3A03E13 /* byMakerCleanerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = byMakerCleanerApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -119,7 +120,7 @@
 				F9DCFE4D66BB757664F16D92 /* Models */,
 				283F62916C7A3967F93E79D6 /* ViewModels */,
 				D30DB3E1E65D8A6536A64010 /* Views */,
-				DED6C61B30572869000985B4 /* Assets 2.xcassets */,
+				E9F041050BE32B0905DB8425 /* Assets.xcassets */,
 			);
 			path = byMakerCleaner;
 			sourceTree = "<group>";
@@ -226,14 +227,13 @@
 			buildConfigurationList = 5B329BEE5C21AD944DF64C29 /* Build configuration list for PBXNativeTarget "byMakerCleaner" */;
 			buildPhases = (
 				83D4C0EC3E1DF47149B0C678 /* Sources */,
+				87B2867361E363D038AA93EC /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = byMakerCleaner;
-			packageProductDependencies = (
-			);
 			productName = byMakerCleaner;
 			productReference = 8BBBACCC33DA5F2DD1B8E572 /* byMakerCleaner.app */;
 			productType = "com.apple.product-type.application";
@@ -271,6 +271,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		87B2867361E363D038AA93EC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D518C701A67D3594024A6EE3 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		83D4C0EC3E1DF47149B0C678 /* Sources */ = {
