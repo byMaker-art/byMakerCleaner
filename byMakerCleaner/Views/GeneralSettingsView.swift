@@ -9,65 +9,64 @@ struct GeneralSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-            Text("General Settings")
-                .font(.headline)
+            Text("[ GENERAL SETTINGS ]")
+                .font(Theme.font(size: 16, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .padding(.bottom, 12)
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
                 .padding(.bottom, 12)
 
             // ── Metrics Refresh Interval ─────────────────────────────
             VStack(alignment: .leading, spacing: 6) {
-                Text("Metrics Refresh Interval")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("How often the menu-bar Helper polls CPU, RAM, Disk and Network.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("METRICS REFRESH INTERVAL")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Text("HOW OFTEN THE MENU-BAR HELPER POLLS CPU, RAM, DISK AND NETWORK.")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
 
                 // Grid of interval buttons (GPU-safe: no Picker)
                 let columns = [GridItem(.adaptive(minimum: 70))]
                 LazyVGrid(columns: columns, spacing: 6) {
                     ForEach(GeneralSettings.intervalOptions, id: \.self) { interval in
                         let isSelected = settings.metricsInterval == interval
-                        Text(GeneralSettings.label(for: interval))
-                            .font(.caption)
-                            .fontWeight(isSelected ? .bold : .regular)
-                            .foregroundColor(isSelected ? .white : .primary)
+                        Text(GeneralSettings.label(for: interval).uppercased())
+                            .font(Theme.font(size: 12, weight: isSelected ? .bold : .regular))
+                            .foregroundColor(isSelected ? Theme.background : Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
-                            .background(isSelected
-                                        ? Color.accentColor
-                                        : Color(NSColor.controlBackgroundColor))
+                            .background(isSelected ? Theme.accent : Theme.surface)
+                            .border(isSelected ? Theme.accent : Theme.border, width: 1)
                             .onTapGesture { settings.metricsInterval = interval }
                     }
                 }
                 .padding(.top, 4)
             }
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
                 .padding(.vertical, 12)
                 
             // ── Cask Database Update ───────────────────────────────────────
             VStack(alignment: .leading, spacing: 6) {
-                Text("Cask Database Update")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("Frequency to check for new Cask DB updates.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("CASK DATABASE UPDATE")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Text("FREQUENCY TO CHECK FOR NEW CASK DB UPDATES.")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     
                 let columnsFreq = [GridItem(.adaptive(minimum: 100))]
                 LazyVGrid(columns: columnsFreq, spacing: 6) {
                     ForEach(GeneralSettings.CaskUpdateFrequency.allCases, id: \.self) { freq in
                         let isSelected = settings.caskUpdateFrequency == freq
-                        Text(freq.label)
-                            .font(.caption)
-                            .fontWeight(isSelected ? .bold : .regular)
-                            .foregroundColor(isSelected ? .white : .primary)
+                        Text(freq.label.uppercased())
+                            .font(Theme.font(size: 12, weight: isSelected ? .bold : .regular))
+                            .foregroundColor(isSelected ? Theme.background : Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 5)
-                            .background(isSelected ? Color.accentColor : Color(NSColor.controlBackgroundColor))
+                            .background(isSelected ? Theme.accent : Theme.surface)
+                            .border(isSelected ? Theme.accent : Theme.border, width: 1)
                             .onTapGesture { settings.caskUpdateFrequency = freq }
                     }
                 }
@@ -75,100 +74,70 @@ struct GeneralSettingsView: View {
                 
                 HStack(spacing: 12) {
                     if case .updateAvailable(let etag) = caskUpdater.state {
-                        Button(action: {
+                        TerminalButton("DOWNLOAD & INSTALL", icon: "arrow.down.circle") {
                             Task { await caskUpdater.downloadAndInstall(etag: etag) }
-                        }) {
-                            Text("Download and Install Cask DB")
-                                .font(.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
                         }
-                        .buttonStyle(.plain)
-                        .background(Color.green.opacity(0.12))
-                        .foregroundColor(.green)
-                        .cornerRadius(6)
                     } else {
-                        Button(action: {
-                            Task { await caskUpdater.checkUpdate() }
-                        }) {
-                            Text("Check Update Cask DB")
-                                .font(.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
+                        let isBusy = caskUpdater.state == .checking || caskUpdater.state == .parsing
+                        TerminalButton("CHECK UPDATE", icon: "arrow.triangle.2.circlepath") {
+                            if !isBusy { Task { await caskUpdater.checkUpdate() } }
                         }
-                        .buttonStyle(.plain)
-                        .background(Color.accentColor.opacity(0.12))
-                        .foregroundColor(.accentColor)
-                        .cornerRadius(6)
-                        .disabled(caskUpdater.state == .checking || caskUpdater.state == .parsing)
+                        .opacity(isBusy ? 0.5 : 1.0)
                     }
                     
                     // Status text
                     switch caskUpdater.state {
                     case .idle:
                         if let lastCheck = UserDefaults.standard.object(forKey: "lastCaskCheckDate") as? Date {
-                            Text("Last checked: \(lastCheck.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            Text("LAST CHECKED: \(lastCheck.formatted(date: .abbreviated, time: .shortened).uppercased())")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                         }
                     case .checking:
-                        ProgressView().controlSize(.small)
-                        Text("Checking...").font(.caption2).foregroundColor(.secondary)
+                        Text("[ CHECKING... ]").font(Theme.font(size: 10)).foregroundColor(Theme.textMuted)
                     case .updateAvailable:
-                        Text("New update available!").font(.caption2).foregroundColor(.green)
+                        Text("[ NEW UPDATE AVAILABLE! ]").font(Theme.font(size: 10)).foregroundColor(Theme.success)
                     case .upToDate:
-                        Text("Database is up to date.").font(.caption2).foregroundColor(.secondary)
+                        Text("[ DB UP TO DATE ]").font(Theme.font(size: 10)).foregroundColor(Theme.textMuted)
                     case .downloading:
-                        ProgressView().controlSize(.small)
-                        Text("Downloading...").font(.caption2).foregroundColor(.secondary)
+                        Text("[ DOWNLOADING... ]").font(Theme.font(size: 10)).foregroundColor(Theme.textMuted)
                     case .parsing:
-                        ProgressView().controlSize(.small)
-                        Text("Installing...").font(.caption2).foregroundColor(.secondary)
+                        Text("[ INSTALLING... ]").font(Theme.font(size: 10)).foregroundColor(Theme.textMuted)
                     case .success:
-                        Text("Successfully updated!").font(.caption2).foregroundColor(.green)
+                        Text("[ SUCCESSFULLY UPDATED! ]").font(Theme.font(size: 10)).foregroundColor(Theme.success)
                     case .error(let msg):
-                        Text("Error: \(msg)").font(.caption2).foregroundColor(.red)
+                        Text("[ ERROR: \(msg.uppercased()) ]").font(Theme.font(size: 10)).foregroundColor(Theme.destructive)
                     }
                 }
                 .padding(.top, 8)
             }
             
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
                 .padding(.vertical, 12)
 
             // ── Contribute ───────────────────────────────────────────────
             VStack(alignment: .leading, spacing: 8) {
-                Text("Contribute to Community")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text("Help improve app detection by sharing your saved app paths with Homebrew Cask.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("CONTRIBUTE TO COMMUNITY")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Text("HELP IMPROVE APP DETECTION BY SHARING YOUR SAVED APP PATHS WITH HOMEBREW CASK.")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                 
                 HStack(spacing: 12) {
-                    Button(action: exportUserDatabase) {
-                        HStack {
-                            Image(systemName: "square.and.arrow.up")
-                            Text("Export Database")
-                        }
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
+                    TerminalButton("EXPORT DATABASE", icon: "square.and.arrow.up") {
+                        exportUserDatabase()
                     }
-                    .buttonStyle(.plain)
-                    .background(Color.accentColor.opacity(0.12))
-                    .foregroundColor(.accentColor)
-                    .cornerRadius(6)
 
-                    Link("How to submit?", destination: URL(string: "https://github.com/Homebrew/homebrew-cask/issues")!)
-                        .font(.caption)
-                        .foregroundColor(.blue)
+                    Link("[ HOW TO SUBMIT? ]", destination: URL(string: "https://github.com/Homebrew/homebrew-cask/issues")!)
+                        .font(Theme.font(size: 10, weight: .bold))
+                        .foregroundColor(Theme.accent)
                 }
                 .padding(.top, 4)
 
-                Text("1. Export the file to your Downloads folder.\n2. Open the link above and create a new issue or pull request.\n3. Attach your exported JSON file.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                Text("1. EXPORT THE FILE TO YOUR DOWNLOADS FOLDER.\n2. OPEN THE LINK ABOVE AND CREATE A NEW ISSUE OR PULL REQUEST.\n3. ATTACH YOUR EXPORTED JSON FILE.")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .padding(.top, 4)
             }
 
@@ -177,6 +146,7 @@ struct GeneralSettingsView: View {
         .padding(20)
         }
         .frame(minWidth: 420, minHeight: 440)
+        .background(Theme.background)
     }
     
     private func exportUserDatabase() {

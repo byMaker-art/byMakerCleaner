@@ -11,10 +11,12 @@
 		0DB0199927F2DEA9CA34B379 /* UniversalBinaryScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968B2D3F995B07E73257A651 /* UniversalBinaryScanner.swift */; };
 		1035624F0B26CCFD3A4A83E4 /* Locations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561E60F714EE2FCE7B674D38 /* Locations.swift */; };
 		10C4FEA46E1F6801E8018EB9 /* byMakerCleanerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4D9F2880F83BF4B3A03E13 /* byMakerCleanerApp.swift */; };
+		22DC40998B0CB0A1079A13E6 /* TerminalComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27249A29EA1F5AE2A65218E /* TerminalComponents.swift */; };
 		25BF7C1303239717FA1C7BE9 /* LoginItemsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796CE09375CF4B939FB1E0BE /* LoginItemsManager.swift */; };
 		28B8C2D479AF65FCCD4A05B8 /* AppPathFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC59DCA95C63225FE4910B18 /* AppPathFinder.swift */; };
 		28FE1CA59CA9B18AA1872207 /* ScreenshotService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6767E3CD18CF71E5C31E3662 /* ScreenshotService.swift */; };
 		30B5E73C91A366183F5B2F1C /* BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBB9BAA5262B6E9336B95A6 /* BluetoothService.swift */; };
+		442C412EB210C2A8556E2FE3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A94963B0C15A08B4274F36 /* Theme.swift */; };
 		45D06576AC53C9EAC492E572 /* CaskDatabaseUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4616FBA5F3138C21B1B7122A /* CaskDatabaseUpdater.swift */; };
 		4BD97B2E84A71AD38F349100 /* ProviderPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1149DEDA96FDE78A8FD599 /* ProviderPaths.swift */; };
 		4F5BBF835EEF2FC64EC63659 /* LoginItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6766EFEF538F9DABCECD4BD6 /* LoginItemsView.swift */; };
@@ -78,10 +80,12 @@
 		9DD5B551BAAEC3B3C9BF4459 /* HealthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthService.swift; sourceTree = "<group>"; };
 		9EEACED8A616F1BB4BE77A17 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		9F5E1CAA46FD6DB9AF2C7B81 /* AppDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDetailView.swift; sourceTree = "<group>"; };
+		A27249A29EA1F5AE2A65218E /* TerminalComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TerminalComponents.swift; path = byMakerCleaner/UI/TerminalComponents.swift; sourceTree = SOURCE_ROOT; };
 		ABE3BE863A3E6DABA3327555 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		B4669C9CAFAB890E8C58225B /* HealthGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthGaugeView.swift; sourceTree = "<group>"; };
 		B7CA127DEF2CD157554B33AD /* HealthScoreCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthScoreCalculator.swift; sourceTree = "<group>"; };
 		BEBB9BAA5262B6E9336B95A6 /* BluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothService.swift; sourceTree = "<group>"; };
+		C1A94963B0C15A08B4274F36 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = byMakerCleaner/UI/Theme.swift; sourceTree = SOURCE_ROOT; };
 		C4C0146E043DB3BA2A5CCCC3 /* CategoryRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryRowView.swift; sourceTree = "<group>"; };
 		C5F14558FEC52F440653537B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		CC5B1479FBCE7B3A4C55BD53 /* SystemMetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsService.swift; sourceTree = "<group>"; };
@@ -141,6 +145,8 @@
 			children = (
 				24B10BEE8C3DBAC4E35D5AE3 /* byMakerCleaner */,
 				1E826EE0CE36FE15F58F88C2 /* Products */,
+				C1A94963B0C15A08B4274F36 /* Theme.swift */,
+				A27249A29EA1F5AE2A65218E /* TerminalComponents.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -310,6 +316,8 @@
 				0DB0199927F2DEA9CA34B379 /* UniversalBinaryScanner.swift in Sources */,
 				D565A3B2880A69260F37FFA8 /* UserDatabase.swift in Sources */,
 				10C4FEA46E1F6801E8018EB9 /* byMakerCleanerApp.swift in Sources */,
+				442C412EB210C2A8556E2FE3 /* Theme.swift in Sources */,
+				22DC40998B0CB0A1079A13E6 /* TerminalComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

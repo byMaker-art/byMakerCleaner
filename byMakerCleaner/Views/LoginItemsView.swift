@@ -9,9 +9,10 @@ struct LoginItemsView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerBar
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
             contentArea
         }
+        .background(Theme.background)
         .onAppear { manager.scanAll() }
     }
 
@@ -20,17 +21,18 @@ struct LoginItemsView: View {
     private var headerBar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("⚙️ Login Items")
-                    .font(.headline)
-                Text("Apps and services that launch at startup")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("[ LOGIN ITEMS ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                Text("APPS AND SERVICES THAT LAUNCH AT STARTUP")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
             }
             Spacer()
             if manager.isScanning {
-                Text("Scanning...")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("SCANNING...")
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
             }
             refreshButton
         }
@@ -40,15 +42,11 @@ struct LoginItemsView: View {
 
     private var refreshButton: some View {
         let isScanning = manager.isScanning
-        return Text(isScanning ? "..." : "Refresh")
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundColor(isScanning ? .secondary : .accentColor)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Color.accentColor.opacity(isScanning ? 0.05 : 0.12))
-            .cornerRadius(6)
-            .onTapGesture { if !isScanning { manager.scanAll() } }
+        
+        return TerminalButton(isScanning ? "..." : "REFRESH", icon: "arrow.clockwise") {
+            if !isScanning { manager.scanAll() }
+        }
+        .opacity(isScanning ? 0.5 : 1.0)
     }
 
     // MARK: - Content
@@ -57,10 +55,12 @@ struct LoginItemsView: View {
     private var contentArea: some View {
         if manager.items.isEmpty && !manager.isScanning {
             VStack(spacing: 12) {
-                Text("✅").font(.system(size: 40))
-                Text("No login items found.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text("[ NO ITEMS FOUND ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.success)
+                Text("SYSTEM STARTUP IS CLEAN")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -76,37 +76,38 @@ struct LoginItemsView: View {
             HStack(spacing: 0) {
                 Spacer()
 
-                Text("Sort:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("SORT:")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
                     .padding(.trailing, 4)
 
                 ForEach(LoginItemsManager.SortOrder.allCases, id: \.self) { order in
                     let isActive = manager.sortOrder == order
-                    Text(order.rawValue)
-                        .font(.caption)
-                        .fontWeight(isActive ? .bold : .regular)
-                        .foregroundColor(isActive ? .accentColor : .secondary)
+                    Text(order.rawValue.uppercased())
+                        .font(Theme.font(size: 12, weight: isActive ? .bold : .regular))
+                        .foregroundColor(isActive ? Theme.background : Theme.textMuted)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(isActive ? Color.accentColor.opacity(0.12) : Color.clear)
+                        .background(isActive ? Theme.accent : Color.clear)
+                        .border(isActive ? Theme.accent : Color.clear, width: 1)
                         .onTapGesture { manager.sortOrder = order }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Theme.surface)
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
 
             List {
                 // ── Apps (Open at Login) ───────────────────────────────────
                 let apps = manager.sortedItems(for: [.app])
                 if !apps.isEmpty {
-                    sectionHeader(title: "🚀 Apps (Open at Login)", count: apps.count)
+                    sectionHeader(title: "[+] APPS (OPEN AT LOGIN)", count: apps.count)
                     ForEach(apps) { item in
                         itemRow(for: item)
-                            .listRowSeparator(.visible)
+                            .listRowBackground(Theme.background)
+                            .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
                 }
@@ -114,10 +115,11 @@ struct LoginItemsView: View {
                 // ── User LaunchAgents ──────────────────────────────────────
                 let userAgents = manager.sortedItems(for: [.userAgent])
                 if !userAgents.isEmpty {
-                    sectionHeader(title: "🔧 User Background Services", count: userAgents.count)
+                    sectionHeader(title: "[+] USER BACKGROUND SERVICES", count: userAgents.count)
                     ForEach(userAgents) { item in
                         itemRow(for: item)
-                            .listRowSeparator(.visible)
+                            .listRowBackground(Theme.background)
+                            .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
                 }
@@ -126,19 +128,22 @@ struct LoginItemsView: View {
                 let systemItems = manager.sortedItems(for: [.systemAgent, .systemDaemon])
                 if !systemItems.isEmpty {
                     sectionHeaderWithAction(
-                        title: "🔒 System Background Services",
+                        title: "[🔒] SYSTEM BACKGROUND SERVICES",
                         count: systemItems.count,
                         action: { manager.openSystemSettingsLoginItems() },
-                        actionLabel: "Open System Settings"
+                        actionLabel: "[ SETTINGS ]"
                     )
                     ForEach(systemItems) { item in
                         itemRow(for: item)
-                            .listRowSeparator(.visible)
+                            .listRowBackground(Theme.background)
+                            .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                     }
                 }
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Theme.background)
         }
     }
 
@@ -147,16 +152,16 @@ struct LoginItemsView: View {
     private func sectionHeader(title: String, count: Int) -> some View {
         HStack {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(Theme.font(size: 12, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
             Text("(\(count))")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Theme.background)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets())
     }
@@ -169,23 +174,20 @@ struct LoginItemsView: View {
     ) -> some View {
         HStack {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                .font(Theme.font(size: 12, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
             Text("(\(count))")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
             Spacer()
             Text(actionLabel)
-                .font(.caption)
-                .foregroundColor(.accentColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.accentColor.opacity(0.1))
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .onTapGesture { action() }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Theme.background)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets())
     }
@@ -199,34 +201,35 @@ struct LoginItemsView: View {
             // ── LEFT: status control (like OrphanFinder's checkbox) ──────────
             switch item.type {
             case .app:
-                // ☐/☑ Hide toggle — acts as the "checkbox" for this item
-                Text(item.isHidden ? "☑" : "☐")
-                    .font(.system(size: 16))
-                    .foregroundColor(item.isHidden ? .accentColor : .secondary)
+                Text(item.isHidden ? "[X]" : "[ ]")
+                    .font(Theme.font(size: 14))
+                    .foregroundColor(item.isHidden ? Theme.accent : Theme.textMuted)
+                    .frame(width: 24)
                     .onTapGesture { manager.toggleHiddenForApp(item) }
 
             case .userAgent:
-                // ☐/☑ Enabled toggle
-                Text(item.isEnabled ? "☑" : "☐")
-                    .font(.system(size: 16))
-                    .foregroundColor(item.isEnabled ? .accentColor : .secondary)
+                Text(item.isEnabled ? "[X]" : "[ ]")
+                    .font(Theme.font(size: 14))
+                    .foregroundColor(item.isEnabled ? Theme.accent : Theme.textMuted)
+                    .frame(width: 24)
                     .onTapGesture { manager.toggleAgentEnabled(item) }
 
             default:
-                // 🔒 read-only system item
-                Text("🔒")
-                    .font(.system(size: 14))
+                Text("[🔒]")
+                    .font(Theme.font(size: 14))
+                    .foregroundColor(Theme.textMuted)
+                    .frame(width: 24)
             }
 
             // ── MIDDLE: name + path ──────────────────────────────────────────
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.subheadline)
-                    .bold()
+                Text(item.name.uppercased())
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(1)
                 Text(item.path)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
@@ -243,23 +246,21 @@ struct LoginItemsView: View {
 
             // ── RIGHT: Remove (apps only) + Finder ───────────────────────────
             if item.type == .app {
-                Text("Remove")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.red)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.red.opacity(0.08))
-                    .cornerRadius(4)
+                Text("[ REMOVE ]")
+                    .font(Theme.font(size: 10, weight: .bold))
+                    .foregroundColor(Theme.destructive)
                     .onTapGesture { manager.removeApp(item) }
             }
 
-            Text("Finder")
-                .font(.caption)
-                .foregroundColor(.accentColor)
+            Text("[ FINDER ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .onTapGesture { manager.revealInFinder(path: item.path) }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(Theme.surface)
+        .border(Theme.border, width: 1)
     }
 
     // MARK: - Helpers (unused icon helper removed — type displayed inline above)

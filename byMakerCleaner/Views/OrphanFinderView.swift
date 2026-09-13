@@ -8,13 +8,14 @@ struct OrphanFinderView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerBar
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
             contentArea
             if vm.scanState == .done && !vm.rawFiles.isEmpty {
-                Divider()
+                Rectangle().fill(Theme.border).frame(height: 1)
                 actionBar
             }
         }
+        .background(Theme.background)
     }
 
     // MARK: - Header
@@ -22,17 +23,18 @@ struct OrphanFinderView: View {
     private var headerBar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("🔍 Orphan Finder")
-                    .font(.headline)
-                Text("Leftovers from uninstalled apps")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("[ ORPHAN FINDER ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                Text("LEFTOVERS FROM UNINSTALLED APPS")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
             }
             Spacer()
             if !vm.statusMessage.isEmpty {
-                Text(vm.statusMessage)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(vm.statusMessage.uppercased())
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .lineLimit(1)
             }
             scanButton
@@ -45,20 +47,16 @@ struct OrphanFinderView: View {
         let isBusy = vm.scanState == .buildingMap || vm.scanState == .scanning
         let label: String = {
             switch vm.scanState {
-            case .buildingMap: return "Building map..."
-            case .scanning:    return "Scanning..."
-            default:           return "Scan"
+            case .buildingMap: return "BUILDING MAP..."
+            case .scanning:    return "SCANNING..."
+            default:           return "SCAN"
             }
         }()
-        return Text(label)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundColor(isBusy ? .secondary : .accentColor)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Color.accentColor.opacity(isBusy ? 0.05 : 0.12))
-            .cornerRadius(6)
-            .onTapGesture { if !isBusy { vm.startScan() } }
+        
+        return TerminalButton(label, icon: "magnifyingglass") {
+            if !isBusy { vm.startScan() }
+        }
+        .opacity(isBusy ? 0.5 : 1.0)
     }
 
     // MARK: - Content
@@ -76,11 +74,13 @@ struct OrphanFinderView: View {
 
     private var idlePlaceholder: some View {
         VStack(spacing: 12) {
-            Text("🧹").font(.system(size: 40))
-            Text("Press Scan to find leftover files\nfrom apps you've already uninstalled.")
+            Text("[ SYSTEM IDLE ]")
+                .font(Theme.font(size: 16, weight: .bold))
+                .foregroundColor(Theme.textMuted)
+            Text("PRESS SCAN TO FIND LEFTOVER FILES\nFROM UNINSTALLED APPS.")
                 .multilineTextAlignment(.center)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -88,19 +88,20 @@ struct OrphanFinderView: View {
     /// Pass 1 — building occupied-paths map via AppPathFinder
     private var buildingMapView: some View {
         VStack(spacing: 14) {
-            Text("🗂").font(.system(size: 40))
-            Text("Building app map...")
-                .font(.subheadline).foregroundColor(.secondary)
-            Text(vm.statusMessage)
-                .font(.caption).foregroundColor(.secondary)
+            Text("[ BUILDING APP MAP... ]")
+                .font(Theme.font(size: 16, weight: .bold))
+                .foregroundColor(Theme.accent)
+            Text(vm.statusMessage.uppercased())
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
                 .lineLimit(1)
             // GPU-safe text progress bar (no ProgressView to avoid Metal)
             let filled  = Int(vm.mapProgress * 20)
             let empty   = 20 - filled
-            Text("[" + String(repeating: "█", count: filled)
-                     + String(repeating: "░", count: empty) + "]")
-                .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(.accentColor)
+            Text("[" + String(repeating: "█", count: max(0, filled))
+                     + String(repeating: "░", count: max(0, empty)) + "]")
+                .font(Theme.font(size: 14, weight: .bold))
+                .foregroundColor(Theme.accent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -108,20 +109,24 @@ struct OrphanFinderView: View {
     /// Pass 2 — actual reverse scan
     private var scanningView: some View {
         VStack(spacing: 12) {
-            Text("🔍").font(.system(size: 40))
-            Text("Scanning Library directories...")
-                .font(.subheadline).foregroundColor(.secondary)
-            Text("Almost done — cross-checking against app map")
-                .font(.caption).foregroundColor(.secondary)
+            Text("[ SCANNING LIBRARY... ]")
+                .font(Theme.font(size: 16, weight: .bold))
+                .foregroundColor(Theme.accent)
+            Text("CROSS-CHECKING AGAINST APP MAP")
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyView: some View {
         VStack(spacing: 12) {
-            Text("✅").font(.system(size: 40))
-            Text("No orphan files found — your Library is clean!")
-                .font(.subheadline).foregroundColor(.secondary)
+            Text("[ NO ORPHANS FOUND ]")
+                .font(Theme.font(size: 16, weight: .bold))
+                .foregroundColor(Theme.success)
+            Text("LIBRARY IS CLEAN")
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -134,84 +139,88 @@ struct OrphanFinderView: View {
             HStack(spacing: 0) {
                 // Selection info
                 Text(vm.selectedCount == 0
-                     ? "\(vm.rawFiles.count) item(s) found"
-                     : "\(vm.selectedCount) selected — \(vm.selectedTotalSize)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                     ? "\(vm.rawFiles.count) ITEM(S) FOUND"
+                     : "\(vm.selectedCount) SELECTED — \(vm.selectedTotalSize)")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textPrimary)
                     .frame(minWidth: 160, alignment: .leading)
 
                 Spacer()
 
                 // Sort buttons
-                Text("Sort:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("SORT:")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
                     .padding(.trailing, 4)
 
                 ForEach(OrphanFinderViewModel.SortOrder.allCases, id: \.self) { order in
                     let isActive = vm.sortOrder == order
-                    Text(order.rawValue)
-                        .font(.caption)
-                        .fontWeight(isActive ? .bold : .regular)
-                        .foregroundColor(isActive ? .accentColor : .secondary)
+                    Text(order.rawValue.uppercased())
+                        .font(Theme.font(size: 12, weight: isActive ? .bold : .regular))
+                        .foregroundColor(isActive ? Theme.background : Theme.textMuted)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(isActive ? Color.accentColor.opacity(0.12) : Color.clear)
+                        .background(isActive ? Theme.accent : Color.clear)
+                        .border(isActive ? Theme.accent : Color.clear, width: 1)
                         .onTapGesture { vm.sortOrder = order }
                 }
 
                 Text("  |  ")
-                    .font(.caption)
-                    .foregroundColor(Color.secondary.opacity(0.4))
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.border)
 
                 // Select/Deselect
-                Text("Select All")
-                    .font(.caption)
-                    .foregroundColor(.accentColor)
+                Text("ALL")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.accent)
                     .onTapGesture { vm.selectAll() }
 
                 Text("  ·  ")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
 
-                Text("Deselect All")
-                    .font(.caption)
-                    .foregroundColor(.accentColor)
+                Text("NONE")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.accent)
                     .onTapGesture { vm.deselectAll() }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Theme.surface)
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
 
             // ── List ────────────────────────────────────────────────────
             List(vm.sortedFiles) { file in
                 orphanRow(file)
-                    .listRowSeparator(.visible)
+                    .listRowBackground(Theme.background)
+                    .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
     }
 
     private func orphanRow(_ file: OrphanFile) -> some View {
         let isSelected = vm.selectedItems.contains(file.id)
         return HStack(spacing: 8) {
-            // Emoji checkbox (GPU-safe)
-            Text(isSelected ? "☑" : "☐")
-                .font(.system(size: 16))
-                .foregroundColor(isSelected ? .accentColor : .secondary)
+            // Checkbox
+            Text(isSelected ? "[X]" : "[ ]")
+                .font(Theme.font(size: 14))
+                .foregroundColor(isSelected ? Theme.accent : Theme.textMuted)
+                .frame(width: 24)
                 .onTapGesture { vm.toggleSelection(file.id) }
 
             // File info
             VStack(alignment: .leading, spacing: 2) {
                 Text(file.name)
-                    .font(.subheadline)
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(1)
                 Text(compactPath(file.path))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .lineLimit(1)
             }
             .onTapGesture { vm.toggleSelection(file.id) }
@@ -221,24 +230,27 @@ struct OrphanFinderView: View {
             // Date (shown when sorting by date)
             if vm.sortOrder == .date {
                 Text(formattedDate(file.dateModified))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .frame(width: 70, alignment: .trailing)
             }
 
             // Size
             Text(file.formattedSize)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
                 .frame(width: 64, alignment: .trailing)
 
             // Reveal in Finder
-            Text("Finder")
-                .font(.caption)
-                .foregroundColor(.accentColor)
+            Text("[ FINDER ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .onTapGesture { vm.revealInFinder(file.url) }
         }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(isSelected ? Theme.surface : Color.clear)
+        .border(Theme.border, width: 1)
     }
 
     // MARK: - Action Bar
@@ -246,25 +258,23 @@ struct OrphanFinderView: View {
     private var actionBar: some View {
         HStack {
             Text(vm.selectedCount == 0
-                 ? "Select items above to delete"
-                 : "\(vm.selectedCount) selected — \(vm.selectedTotalSize)")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                 ? "SELECT ITEMS ABOVE TO DELETE"
+                 : "\(vm.selectedCount) SELECTED — \(vm.selectedTotalSize)")
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textPrimary)
             Spacer()
-            Text(vm.isDeleting ? "Moving to Trash..." : "Move to Trash")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(vm.selectedCount == 0 || vm.isDeleting ? .secondary : .red)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(Color.red.opacity(vm.selectedCount == 0 ? 0.0 : 0.08))
-                .onTapGesture {
-                    if vm.selectedCount > 0 && !vm.isDeleting { vm.trashSelected() }
-                }
+            
+            let isDeleting = vm.isDeleting
+            let canDelete = vm.selectedCount > 0 && !isDeleting
+            
+            TerminalButton(isDeleting ? "MOVING TO TRASH..." : "PURGE SELECTED", icon: "trash", isDestructive: true) {
+                if canDelete { vm.trashSelected() }
+            }
+            .opacity(canDelete ? 1.0 : 0.5)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Theme.surface)
     }
 
     // MARK: - Helpers

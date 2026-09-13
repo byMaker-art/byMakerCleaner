@@ -10,10 +10,12 @@ struct CleanerView: View {
             // ── Header ──────────────────────────────────────────────
             headerView
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+                .padding(.top, 24)
+                .padding(.bottom, 16)
 
-            Divider()
+            Rectangle()
+                .fill(Theme.border)
+                .frame(height: 1)
 
             // ── Content ─────────────────────────────────────────────
             switch appState.scanState {
@@ -30,6 +32,7 @@ struct CleanerView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Theme.background)
     }
 
     // MARK: - Header
@@ -45,15 +48,12 @@ struct CleanerView: View {
             }
             Spacer()
             if appState.scanState == .done {
-                Text("Scan Again")
-                    .font(.subheadline)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.accentColor.opacity(0.15))
-                    .cornerRadius(8)
-                    .onTapGesture { appState.startSystemScan() }
+                TerminalButton("RESCAN", icon: "arrow.clockwise") {
+                    appState.startSystemScan()
+                }
             }
         }
+        .foregroundColor(Theme.textPrimary)
     }
 
     // MARK: - Idle
@@ -70,14 +70,9 @@ struct CleanerView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 40)
 
-            Text("Start Smart Scan")
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 10)
-                .background(Color.accentColor)
-                .cornerRadius(10)
-                .onTapGesture { appState.startSystemScan() }
+            TerminalButton("INITIATE SCAN", icon: "magnifyingglass") {
+                appState.startSystemScan()
+            }
 
             Spacer()
         }
@@ -99,10 +94,9 @@ struct CleanerView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .frame(maxWidth: 340)
-            Text("Cancel")
-                .font(.subheadline)
-                .foregroundColor(.red)
-                .onTapGesture { appState.cancelSystemScan() }
+            TerminalButton("ABORT", isDestructive: true) {
+                appState.cancelSystemScan()
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -117,39 +111,48 @@ struct CleanerView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
+            
+            // Bar Chart
+            let chartItems = appState.categoryResults.map { result in
+                BarChartItem(label: result.category.rawValue, value: Double(result.totalSize), color: Theme.accent)
+            }
+            if !chartItems.isEmpty {
+                TerminalBarChart(items: chartItems, height: 80)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+            }
 
             // Category list
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: 16) {
                     ForEach(appState.categoryResults) { result in
                         if !result.items.isEmpty {
-                            CategoryRowView(result: result)
-                            Divider().padding(.leading, 16)
+                            TerminalCard(title: result.category.rawValue) {
+                                CategoryRowView(result: result)
+                            }
                         }
                     }
                 }
+                .padding(16)
                 .padding(.bottom, 80)
             }
 
             // Clean button
             if appState.hasSelectedItems {
-                Divider()
+                Rectangle().fill(Theme.border).frame(height: 1)
                 HStack {
-                    Text("Selected: **\(appState.totalSelectedSizeFormatted)**")
-                        .font(.subheadline)
+                    Text("SELECTED: **\(appState.totalSelectedSizeFormatted)**")
+                        .font(Theme.font(size: 14))
+                        .foregroundColor(Theme.textPrimary)
                     Spacer()
-                    Text("🗑️  Clean \(appState.totalSelectedSizeFormatted)")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.red.opacity(0.85))
-                        .cornerRadius(8)
-                        .onTapGesture { appState.cleanSelectedItems() }
+                    TerminalButton("PURGE \(appState.totalSelectedSizeFormatted)", icon: "trash", isDestructive: true) {
+                        appState.cleanSelectedItems()
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
+                .background(Theme.surface)
             }
         }
     }
@@ -161,11 +164,12 @@ struct CleanerView: View {
 
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Found **\(totalFormatted)** of junk")
-                    .font(.subheadline)
-                Text("\(categoryCount) categories with items")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("FOUND **\(totalFormatted)** OF JUNK")
+                    .font(Theme.font(size: 14, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Text("\(categoryCount) CATEGORIES WITH ITEMS")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
             }
             Spacer()
         }
@@ -218,16 +222,12 @@ struct CleanerView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 40)
 
-            Text("Scan Again")
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 10)
-                .background(Color.accentColor)
-                .cornerRadius(10)
-                .onTapGesture { appState.startSystemScan() }
+            TerminalButton("ACKNOWLEDGE", icon: "checkmark") {
+                appState.startSystemScan() // resets to scan view
+            }
             Spacer()
         }
+        .foregroundColor(Theme.textPrimary)
         .frame(maxWidth: .infinity)
     }
 }

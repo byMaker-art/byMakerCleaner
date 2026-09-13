@@ -6,94 +6,89 @@ struct MaintenanceView: View {
     @State private var resultMessage: String?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Maintenance")
-                .font(.largeTitle)
-                .bold()
-                .padding(.bottom, 10)
-            
-            Text("Optimize your system's performance. These tasks require administrator privileges.")
-                .foregroundColor(.secondary)
-            
-            if let result = resultMessage {
-                Text(result)
-                    .foregroundColor(.green)
-                    .padding(8)
-                    .background(Color.green.opacity(0.2))
-                    .cornerRadius(4)
+        VStack(spacing: 0) {
+            // ── Header ──────────────────────────────────────────────
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("[ MAINTENANCE ]")
+                        .font(Theme.font(size: 16, weight: .bold))
+                        .foregroundColor(Theme.accent)
+                    Text("OPTIMIZE SYSTEM PERFORMANCE (REQUIRES ADMIN)")
+                        .font(Theme.font(size: 12))
+                        .foregroundColor(Theme.textMuted)
+                }
+                Spacer()
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             
+            Rectangle().fill(Theme.border).frame(height: 1)
+            
+            // ── Content ──────────────────────────────────────────────
             VStack(alignment: .leading, spacing: 16) {
-                // Free Up RAM
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("Free Up RAM")
-                            .font(.headline)
-                        Text("Forces inactive memory to be freed up. Helpful if your Mac feels sluggish after heavy use.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    
-                    if isRunningRAM {
-                        Text("[████░░░░]")
-                            .foregroundColor(.accentColor)
-                            .monospaced()
-                    } else {
-                        Text("Run")
-                            .font(.subheadline)
-                            .bold()
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(6)
-                            .onTapGesture {
+                if let result = resultMessage {
+                    Text(result.uppercased())
+                        .font(Theme.font(size: 12, weight: .bold))
+                        .foregroundColor(Theme.success)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.surface)
+                        .border(Theme.success, width: 1)
+                }
+                
+                TerminalCard(title: "MEMORY OPTIMIZATION") {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("FREE UP RAM")
+                                .font(Theme.font(size: 14, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("FORCES INACTIVE MEMORY TO BE FREED UP.")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
+                        }
+                        Spacer()
+                        
+                        if isRunningRAM {
+                            Text("[████░░░░]")
+                                .font(Theme.font(size: 14))
+                                .foregroundColor(Theme.accent)
+                        } else {
+                            TerminalButton("EXECUTE", icon: "cpu") {
                                 runRAM()
                             }
+                        }
                     }
                 }
-                .padding()
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(8)
                 
-                // Flush DNS
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("Flush DNS Cache")
-                            .font(.headline)
-                        Text("Resolves issues with websites not loading or network connection problems.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    
-                    if isRunningDNS {
-                        Text("[████░░░░]")
-                            .foregroundColor(.accentColor)
-                            .monospaced()
-                    } else {
-                        Text("Run")
-                            .font(.subheadline)
-                            .bold()
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(Color.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(6)
-                            .onTapGesture {
+                TerminalCard(title: "NETWORK OPTIMIZATION") {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("FLUSH DNS CACHE")
+                                .font(Theme.font(size: 14, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("RESOLVES NETWORK CONNECTION PROBLEMS.")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
+                        }
+                        Spacer()
+                        
+                        if isRunningDNS {
+                            Text("[████░░░░]")
+                                .font(Theme.font(size: 14))
+                                .foregroundColor(Theme.accent)
+                        } else {
+                            TerminalButton("EXECUTE", icon: "network") {
                                 runDNS()
                             }
+                        }
                     }
                 }
-                .padding()
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(8)
+                
+                Spacer()
             }
-            
-            Spacer()
+            .padding(16)
         }
-        .padding(30)
+        .background(Theme.background)
     }
     
     private func runRAM() {

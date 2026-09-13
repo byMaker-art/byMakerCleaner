@@ -25,6 +25,7 @@ struct byMakerCleanerApp: App {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(healthService)
+                .background(Theme.background)
                 .onAppear {
                     CaskDatabaseUpdater.shared.checkAgeAndNotifyIfNeeded()
                 }
@@ -35,6 +36,7 @@ struct byMakerCleanerApp: App {
                     }
                 }
         }
+        .windowStyle(.hiddenTitleBar)
 
         // ── Menu Bar Tray Widget (merged from Helper) ─────────────────────
         MenuBarExtra {
@@ -63,6 +65,8 @@ struct byMakerCleanerApp: App {
         // ── Settings window (Cmd+,) ──────────────────────────────────────
         Settings {
             GeneralSettingsView()
+                .background(Theme.background)
         }
+        .windowStyle(.hiddenTitleBar)
     }
 }

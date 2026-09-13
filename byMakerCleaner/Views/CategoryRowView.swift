@@ -16,40 +16,42 @@ struct CategoryRowView: View {
                     .font(.title3)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(result.category.rawValue)
-                        .font(.subheadline).bold()
-                    Text("\(result.items.count) item\(result.items.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text(result.category.rawValue.uppercased())
+                        .font(Theme.font(size: 14, weight: .bold))
+                        .foregroundColor(Theme.textPrimary)
+                    Text("\(result.items.count) ITEM\(result.items.count == 1 ? "" : "S")")
+                        .font(Theme.font(size: 12))
+                        .foregroundColor(Theme.textMuted)
                 }
 
                 Spacer()
 
                 // Toggle all in category
                 let allSelected = !result.items.isEmpty && result.items.allSatisfy { $0.isSelected }
-                Text(allSelected ? "☑" : "☐")
-                    .font(.title3)
-                    .foregroundColor(allSelected ? .accentColor : .secondary)
+                Text(allSelected ? "[X]" : "[ ]")
+                    .font(Theme.font(size: 14))
+                    .foregroundColor(allSelected ? Theme.accent : Theme.textMuted)
                     .onTapGesture { appState.toggleCategory(result.category) }
                     .padding(.trailing, 4)
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(result.formattedTotalSize)
-                        .font(.subheadline).bold()
-                        .foregroundColor(result.selectedSize > 0 ? .primary : .secondary)
+                        .font(Theme.font(size: 14, weight: .bold))
+                        .foregroundColor(result.selectedSize > 0 ? Theme.textPrimary : Theme.textMuted)
                     if result.selectedSize > 0 && result.selectedSize != result.totalSize {
-                        Text(ByteCountFormatter.string(fromByteCount: result.selectedSize, countStyle: .file) + " selected")
-                            .font(.caption2)
-                            .foregroundColor(.accentColor)
+                        Text(ByteCountFormatter.string(fromByteCount: result.selectedSize, countStyle: .file) + " SELECTED")
+                            .font(Theme.font(size: 10))
+                            .foregroundColor(Theme.accent)
                     }
                 }
 
                 Text(isExpanded ? "▲" : "▼")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
+            .background(isExpanded ? Theme.surface.opacity(0.5) : Color.clear)
             .contentShape(Rectangle())
             .onTapGesture { isExpanded.toggle() }
 
@@ -58,7 +60,7 @@ struct CategoryRowView: View {
                 ForEach(result.items) { item in
                     ItemRowView(item: item, category: result.category)
                     if item.id != result.items.last?.id {
-                        Divider().padding(.leading, 44)
+                        Rectangle().fill(Theme.border).frame(height: 1).padding(.leading, 44)
                     }
                 }
             }
@@ -75,27 +77,28 @@ struct ItemRowView: View {
     var body: some View {
         HStack(spacing: 10) {
             // Checkbox
-            Text(item.isSelected ? "☑" : "☐")
-                .font(.body)
-                .foregroundColor(item.isSelected ? .accentColor : .secondary)
+            Text(item.isSelected ? "[X]" : "[ ]")
+                .font(Theme.font(size: 14))
+                .foregroundColor(item.isSelected ? Theme.accent : Theme.textMuted)
                 .onTapGesture { appState.toggleItem(item, inCategory: category) }
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.name)
-                    .font(.subheadline)
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(1)
                 if !item.path.isEmpty {
                     Text(item.path)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textMuted)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
                 if let date = item.lastModified {
-                    Text("Modified: \(date, style: .date)")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    Text("MODIFIED: \(date, style: .date)")
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textMuted)
                 }
             }
             .onTapGesture { appState.toggleItem(item, inCategory: category) }
@@ -103,12 +106,11 @@ struct ItemRowView: View {
             Spacer()
 
             Text(item.formattedSize)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .background(item.isSelected ? Color.accentColor.opacity(0.06) : Color.clear)
+        .background(item.isSelected ? Theme.surface : Color.clear)
     }
 }

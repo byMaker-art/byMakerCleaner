@@ -14,36 +14,38 @@ struct MenuBarPopoverView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerRow
-            Divider().padding(.vertical, 4)
-            HealthGaugeView(score: healthService.score)
-            Divider().padding(.vertical, 4)
+            Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
+            HealthGaugeView(score: healthService.score) // Assuming this is also restyled or fits
+            Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
             metricSection
-            Divider().padding(.vertical, 4)
+            Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
             actionSection
             if !bluetoothService.pairedDevices.isEmpty {
-                Divider().padding(.vertical, 4)
+                Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
                 bluetoothSection
             }
-            Divider().padding(.vertical, 4)
+            Rectangle().fill(Theme.border).frame(height: 1).padding(.vertical, 8)
             footerRow
         }
         .padding(14)
-        .frame(width: 260)
+        .frame(width: 280)
+        .background(Theme.background)
     }
 
     // MARK: - Header
 
     private var headerRow: some View {
         HStack {
-            Text("byMaker Cleaner")
-                .font(.headline)
+            Text("[ BYMAKER ]")
+                .font(Theme.font(size: 14, weight: .bold))
+                .foregroundColor(Theme.accent)
             Spacer()
             Text("●")
-                .foregroundColor(.green)
+                .foregroundColor(Theme.success)
                 .font(.caption)
-            Text("Active")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            Text("ACTIVE")
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
         }
     }
 
@@ -86,50 +88,41 @@ struct MenuBarPopoverView: View {
         VStack(spacing: 4) {
             HStack {
                 Text(icon)
-                Text(label)
-                    .font(.subheadline).bold()
+                Text(label.uppercased())
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                 Spacer()
-                Text(value)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .monospacedDigit()
+                Text(value.uppercased())
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
             }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.secondary.opacity(0.15))
-                        .frame(height: 5)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(barColor)
-                        .frame(width: geo.size.width * min(max(barValue, 0), 1), height: 5)
-                }
-            }
-            .frame(height: 5)
+            TerminalBarChart(items: [BarChartItem(label: "", value: barValue, color: barColor)], height: 6)
         }
     }
 
     private var networkRow: some View {
         HStack {
             Text("📡")
-            Text("Network")
-                .font(.subheadline).bold()
+            Text("NETWORK")
+                .font(Theme.font(size: 12, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
             Spacer()
             VStack(alignment: .trailing, spacing: 1) {
                 HStack(spacing: 4) {
                     Text("↑")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textMuted)
                     Text(m.formattedSpeed(m.netUpBytesPerSec))
-                        .font(.caption)
-                        .monospacedDigit()
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textPrimary)
                 }
                 HStack(spacing: 4) {
                     Text("↓")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textMuted)
                     Text(m.formattedSpeed(m.netDownBytesPerSec))
-                        .font(.caption)
-                        .monospacedDigit()
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textPrimary)
                 }
             }
         }
@@ -139,27 +132,18 @@ struct MenuBarPopoverView: View {
     
     private var actionSection: some View {
         HStack(spacing: 12) {
-            Text("🧹 Free RAM")
-                .font(.caption)
-                .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color.blue)
-                .cornerRadius(4)
+            Text("[ FREE RAM ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .onTapGesture {
-                    // Triggers maintenance RAM cleaning
                     Task { await MaintenanceEngine.shared.freeUpRAM() }
                 }
             
             Spacer()
             
-            Text("📸 Screenshot")
-                .font(.caption)
-                .foregroundColor(.primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.2))
-                .cornerRadius(4)
+            Text("[ SCREENSHOT ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
                 .onTapGesture {
                     ScreenshotService.shared.captureInteractiveToClipboard()
                 }
@@ -171,20 +155,22 @@ struct MenuBarPopoverView: View {
     private var bluetoothSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Bluetooth")
-                    .font(.subheadline).bold()
+                Text("BLUETOOTH")
+                    .font(Theme.font(size: 12, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                 Spacer()
             }
             ForEach(bluetoothService.pairedDevices) { device in
                 HStack {
-                    Text(device.name)
-                        .font(.caption)
+                    Text(device.name.uppercased())
+                        .font(Theme.font(size: 10))
+                        .foregroundColor(Theme.textPrimary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer()
-                    Text(device.isConnected ? "●" : "○")
-                        .foregroundColor(device.isConnected ? .green : .secondary)
-                        .font(.caption)
+                    Text(device.isConnected ? "[ON]" : "[OFF]")
+                        .foregroundColor(device.isConnected ? Theme.success : Theme.textMuted)
+                        .font(Theme.font(size: 10, weight: .bold))
                 }
             }
         }
@@ -194,18 +180,17 @@ struct MenuBarPopoverView: View {
 
     private var footerRow: some View {
         HStack(spacing: 12) {
-            Text("Open App")
-                .font(.caption)
-                .foregroundColor(.accentColor)
+            Text("[ OPEN APP ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
                 .onTapGesture { openMainWindow() }
 
-            // Settings button — macOS 14+: use environment; macOS 13: use selector
             if #available(macOS 14, *) {
                 SettingsOpenerLabel()
             } else {
-                Text("⚙ Settings")
-                    .font(.caption)
-                    .foregroundColor(.accentColor)
+                Text("[ SETTINGS ]")
+                    .font(Theme.font(size: 10, weight: .bold))
+                    .foregroundColor(Theme.accent)
                     .onTapGesture {
                         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                     }
@@ -213,9 +198,9 @@ struct MenuBarPopoverView: View {
 
             Spacer()
 
-            Text("Quit")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            Text("[ QUIT ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.destructive)
                 .onTapGesture { NSApplication.shared.terminate(nil) }
         }
     }
@@ -224,9 +209,9 @@ struct MenuBarPopoverView: View {
 
     private func barColor(for value: Double) -> Color {
         switch value {
-        case ..<0.6:  return .green
-        case ..<0.8:  return .yellow
-        default:      return .red
+        case ..<0.6:  return Theme.success
+        case ..<0.8:  return Theme.warning
+        default:      return Theme.destructive
         }
     }
 
@@ -245,9 +230,9 @@ struct MenuBarPopoverView: View {
 private struct SettingsOpenerLabel: View {
     var body: some View {
         SettingsLink {
-            Text("⚙ Settings")
-                .font(.caption)
-                .foregroundColor(.accentColor)
+            Text("[ SETTINGS ]")
+                .font(Theme.font(size: 10, weight: .bold))
+                .foregroundColor(Theme.accent)
         }
         .buttonStyle(.plain)
     }

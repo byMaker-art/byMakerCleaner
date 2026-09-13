@@ -9,9 +9,10 @@ struct AppListView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerBar
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
             contentArea
         }
+        .background(Theme.background)
         .onAppear {
             if appState.installedApps.isEmpty {
                 appState.loadInstalledApps()
@@ -25,29 +26,30 @@ struct AppListView: View {
     private var headerBar: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("📱 App Uninstaller")
-                    .font(.headline)
-                Text("Find and remove installed applications")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("[ APP UNINSTALLER ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.accent)
+                Text("FIND AND REMOVE INSTALLED APPLICATIONS")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
             }
             Spacer()
             if !appState.installedApps.isEmpty {
                 VStack(alignment: .trailing, spacing: 1) {
                     let knownCount = appState.installedApps.filter { $0.isKnownApp }.count
                     let unknownCount = appState.installedApps.count - knownCount
-                    Text("\(appState.installedApps.count) apps  •  ✅ \(knownCount)  ⚠️ \(unknownCount)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("\(appState.installedApps.count) APPS  •  [+] \(knownCount)  [!] \(unknownCount)")
+                        .font(Theme.font(size: 12))
+                        .foregroundColor(Theme.textMuted)
                     if appState.isRecalculatingSizes {
-                        Text("calculating sizes...")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        Text("CALCULATING SIZES...")
+                            .font(Theme.font(size: 10))
+                            .foregroundColor(Theme.textMuted)
                     }
                     if appState.isHeuristicScanning {
-                        Text("deep scanning selected...")
-                            .font(.caption2)
-                            .foregroundColor(.orange)
+                        Text("DEEP SCANNING SELECTED...")
+                            .font(Theme.font(size: 10))
+                            .foregroundColor(Theme.accent)
                     }
                 }
             }
@@ -59,18 +61,14 @@ struct AppListView: View {
 
     private var rescanButton: some View {
         let isBusy = appState.isLoadingApps || appState.isRecalculatingSizes || appState.isHeuristicScanning
-        let label = appState.isLoadingApps ? "Scanning..." :
-                    appState.isRecalculatingSizes ? "Calculating..." :
-                    appState.isHeuristicScanning ? "Scanning..." : "Rescan"
-        return Text(label)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundColor(isBusy ? .secondary : .accentColor)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Color.accentColor.opacity(isBusy ? 0.05 : 0.12))
-            .cornerRadius(6)
-            .onTapGesture { if !isBusy { appState.loadInstalledApps() } }
+        let label = appState.isLoadingApps ? "SCANNING..." :
+                    appState.isRecalculatingSizes ? "CALCULATING..." :
+                    appState.isHeuristicScanning ? "SCANNING..." : "RESCAN"
+        
+        return TerminalButton(label, icon: "arrow.clockwise") {
+            if !isBusy { appState.loadInstalledApps() }
+        }
+        .opacity(isBusy ? 0.5 : 1.0)
     }
 
     // MARK: - Content
@@ -79,18 +77,16 @@ struct AppListView: View {
     private var contentArea: some View {
         if appState.isLoadingApps && appState.installedApps.isEmpty {
             VStack(spacing: 12) {
-                Text("🔍").font(.system(size: 40))
-                Text("Looking for installed apps...")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text("[ SCANNING SYSTEM... ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.accent)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if appState.installedApps.isEmpty {
             VStack(spacing: 12) {
-                Text("📭").font(.system(size: 40))
-                Text("No applications found.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text("[ NO APPLICATIONS FOUND ]")
+                    .font(Theme.font(size: 16, weight: .bold))
+                    .foregroundColor(Theme.textMuted)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -115,27 +111,27 @@ struct AppListView: View {
             // ── Toolbar ─────────────────────────────────────────────────
             HStack(spacing: 0) {
                 Spacer()
-                Text("Sort:")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text("SORT:")
+                    .font(Theme.font(size: 12))
+                    .foregroundColor(Theme.textMuted)
                     .padding(.trailing, 4)
                 ForEach(AppState.AppSortOrder.allCases, id: \.self) { order in
                     let isActive = appState.appSortOrder == order
-                    Text(order.rawValue)
-                        .font(.caption)
-                        .fontWeight(isActive ? .bold : .regular)
-                        .foregroundColor(isActive ? .accentColor : .secondary)
+                    Text(order.rawValue.uppercased())
+                        .font(Theme.font(size: 12, weight: isActive ? .bold : .regular))
+                        .foregroundColor(isActive ? Theme.background : Theme.textMuted)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(isActive ? Color.accentColor.opacity(0.12) : Color.clear)
+                        .background(isActive ? Theme.accent : Color.clear)
+                        .border(isActive ? Theme.accent : Color.clear, width: 1)
                         .onTapGesture { appState.appSortOrder = order }
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(Color(NSColor.windowBackgroundColor))
+            .background(Theme.surface)
 
-            Divider()
+            Rectangle().fill(Theme.border).frame(height: 1)
 
             // ── Two-section list ─────────────────────────────────────────
             List {
@@ -144,24 +140,24 @@ struct AppListView: View {
                     Section {
                         ForEach(userApps) { app in
                             verifiedAppRow(app, isUser: true)
-                                .listRowSeparator(.visible)
+                                .listRowBackground(Theme.background)
+                                .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                 .contentShape(Rectangle())
                                 .onTapGesture { appState.selectApp(app) }
                         }
                     } header: {
                         HStack {
-                            Text("👤  User Verified")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                            Text("— saved by you")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            Text("[+] USER VERIFIED")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("— SAVED BY YOU")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                             Spacer()
                             Text("\(userApps.count)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
                     }
@@ -172,24 +168,24 @@ struct AppListView: View {
                     Section {
                         ForEach(knownApps) { app in
                             verifiedAppRow(app, isUser: false)
-                                .listRowSeparator(.visible)
+                                .listRowBackground(Theme.background)
+                                .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                 .contentShape(Rectangle())
                                 .onTapGesture { appState.selectApp(app) }
                         }
                     } header: {
                         HStack {
-                            Text("✅  Verified Apps")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                            Text("— exact paths from Homebrew Cask DB")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            Text("[+] VERIFIED APPS")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("— EXACT PATHS FROM HOMEBREW CASK DB")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                             Spacer()
                             Text("\(knownApps.count)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
                     }
@@ -200,44 +196,45 @@ struct AppListView: View {
                     Section {
                         ForEach(unknownApps) { app in
                             unknownAppRow(app)
-                                .listRowSeparator(.visible)
+                                .listRowBackground(Theme.background)
+                                .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                         }
                     } header: {
                         HStack {
-                            Text("⚠️  Unknown Apps")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                            Text("— not in Cask DB")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                            Text("[!] UNKNOWN APPS")
+                                .font(Theme.font(size: 12, weight: .bold))
+                                .foregroundColor(Theme.accent)
+                            Text("— NOT IN CASK DB")
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                             Spacer()
                             // Scan Selected button
                             let selectedCount = unknownApps.filter { $0.selectedForHeuristic }.count
                             if selectedCount > 0 {
                                 let busy = appState.isHeuristicScanning
-                                Text(busy ? "Scanning..." : "Deep Scan (\(selectedCount))")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(busy ? .secondary : .orange)
+                                Text(busy ? "[ SCANNING... ]" : "[ DEEP SCAN (\(selectedCount)) ]")
+                                    .font(Theme.font(size: 10, weight: .bold))
+                                    .foregroundColor(busy ? Theme.textMuted : Theme.background)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 3)
-                                    .background(Color.orange.opacity(busy ? 0.05 : 0.12))
-                                    .cornerRadius(5)
+                                    .background(busy ? Color.clear : Theme.accent)
+                                    .border(busy ? Theme.textMuted : Theme.accent, width: 1)
                                     .onTapGesture {
                                         if !busy { appState.scanSelectedWithHeuristic() }
                                     }
                             }
                             Text("\(unknownApps.count)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(Theme.font(size: 10))
+                                .foregroundColor(Theme.textMuted)
                         }
                         .padding(.vertical, 4)
                     }
                 }
             }
             .listStyle(.plain)
+            .background(Theme.background)
+            .scrollContentBackground(.hidden)
 
             if let pendingApp = appState.pendingUserDBApp {
                 userDBBanner(app: pendingApp)
@@ -247,49 +244,48 @@ struct AppListView: View {
 
     private func userDBBanner(app: InstalledApp) -> some View {
         HStack(spacing: 12) {
-            Text("💾")
-                .font(.title2)
+            Text("[+]")
+                .font(Theme.font(size: 16, weight: .bold))
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(app.appName) — \(appState.pendingUserDBPaths?.count ?? 0) files found.")
-                    .font(.subheadline)
-                    .bold()
-                Text("Save to your DB to skip deep scan next time.")
-                    .font(.caption)
+                Text("\(app.appName.uppercased()) — \(appState.pendingUserDBPaths?.count ?? 0) FILES FOUND.")
+                    .font(Theme.font(size: 14, weight: .bold))
+                Text("SAVE TO USER DB TO SKIP DEEP SCAN NEXT TIME.")
+                    .font(Theme.font(size: 10))
                     .opacity(0.8)
             }
             Spacer()
             
-            Button("Dismiss") {
-                withAnimation {
-                    appState.pendingUserDBApp = nil
-                    appState.pendingUserDBPaths = nil
+            Text("[ DISMISS ]")
+                .font(Theme.font(size: 10))
+                .padding(.trailing, 8)
+                .onTapGesture {
+                    withAnimation {
+                        appState.pendingUserDBApp = nil
+                        appState.pendingUserDBPaths = nil
+                    }
                 }
-            }
-            .buttonStyle(.plain)
-            .font(.caption)
-            .padding(.trailing, 8)
             
-            Button("Add to My Database") {
-                if let paths = appState.pendingUserDBPaths {
-                    UserDatabase.shared.save(app: app, paths: paths)
-                    appState.loadInstalledApps() // reload to apply
+            Text("[ ADD TO DB ]")
+                .font(Theme.font(size: 12, weight: .bold))
+                .foregroundColor(Theme.success)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .border(Theme.success, width: 1)
+                .onTapGesture {
+                    if let paths = appState.pendingUserDBPaths {
+                        UserDatabase.shared.save(app: app, paths: paths)
+                        appState.loadInstalledApps() // reload to apply
+                    }
+                    withAnimation {
+                        appState.pendingUserDBApp = nil
+                        appState.pendingUserDBPaths = nil
+                    }
                 }
-                withAnimation {
-                    appState.pendingUserDBApp = nil
-                    appState.pendingUserDBPaths = nil
-                }
-            }
-            .buttonStyle(.plain)
-            .font(.subheadline)
-            .bold()
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(Color.white.opacity(0.2))
-            .cornerRadius(6)
         }
         .padding(12)
-        .background(Color.green.opacity(0.9))
-        .foregroundColor(.white)
+        .background(Theme.surface)
+        .border(Theme.success, width: 1)
+        .foregroundColor(Theme.textPrimary)
         .transition(.move(edge: .bottom))
     }
 
@@ -303,38 +299,40 @@ struct AppListView: View {
                 .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(app.appName)
-                    .font(.subheadline)
-                    .bold()
+                Text("> " + app.appName.uppercased())
+                    .font(Theme.font(size: 14, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(1)
                 Text(app.bundleIdentifier)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .lineLimit(1)
             }
 
             Spacer()
 
             Text(app.formattedSize)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
                 .frame(width: 64, alignment: .trailing)
 
-            Text("›")
-                .font(.title3)
-                .foregroundColor(.secondary)
+            Text("▶")
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
         }
         .padding(.vertical, 2)
+        .padding(.horizontal, 8)
+        .background(Theme.surface)
+        .border(Theme.border, width: 1)
     }
 
     /// Row for Unknown app — has checkbox + tap opens detail, checkbox toggles heuristic selection
     private func unknownAppRow(_ app: InstalledApp) -> some View {
         HStack(spacing: 10) {
             // Checkbox (GPU-safe: text symbol)
-            Text(app.selectedForHeuristic ? "☑" : "☐")
-                .font(.system(size: 18))
-                .foregroundColor(app.selectedForHeuristic ? .orange : .secondary)
+            Text(app.selectedForHeuristic ? "[X]" : "[ ]")
+                .font(Theme.font(size: 14))
+                .foregroundColor(app.selectedForHeuristic ? Theme.accent : Theme.textMuted)
                 .frame(width: 24)
                 .onTapGesture { appState.toggleHeuristicSelection(for: app) }
 
@@ -343,13 +341,13 @@ struct AppListView: View {
                 .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(app.appName)
-                    .font(.subheadline)
-                    .bold()
+                Text("? " + app.appName.uppercased())
+                    .font(Theme.font(size: 14, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(1)
                 Text(app.bundleIdentifier)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(Theme.font(size: 10))
+                    .foregroundColor(Theme.textMuted)
                     .lineLimit(1)
             }
             .contentShape(Rectangle())
@@ -358,16 +356,18 @@ struct AppListView: View {
             Spacer()
 
             Text(app.formattedSize)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+                .font(Theme.font(size: 12))
+                .foregroundColor(Theme.textMuted)
                 .frame(width: 64, alignment: .trailing)
 
-            Text("›")
-                .font(.title3)
-                .foregroundColor(.secondary)
+            Text("▶")
+                .font(Theme.font(size: 10))
+                .foregroundColor(Theme.textMuted)
                 .onTapGesture { appState.selectApp(app) }
         }
         .padding(.vertical, 2)
+        .padding(.horizontal, 8)
+        .background(app.selectedForHeuristic ? Theme.surface : Color.clear)
+        .border(Theme.border, width: 1)
     }
 }

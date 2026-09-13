@@ -11,25 +11,42 @@ struct ContentView: View {
             // App detail pushed over the whole window
             AppDetailView()
                 .environmentObject(appState)
-                .frame(minWidth: 540, minHeight: 440)
+                .frame(minWidth: 700, minHeight: 500)
+                .background(Theme.background)
         } else {
-            VStack(spacing: 0) {
-                // ── Tab Bar ─────────────────────────────────────────
-                HStack(spacing: 0) {
-                    tabLabel(title: "🧹 Smart Scan", tag: 0)
-                    tabLabel(title: "📱 App Uninstaller", tag: 1)
-                    tabLabel(title: "⚙️ Login Items", tag: 2)
-                    tabLabel(title: "🔍 Orphan Finder", tag: 3)
-                    tabLabel(title: "🛠 Maintenance", tag: 4)
+            HStack(spacing: 0) {
+                // ── Left Navigation Panel ──────────────────────────────────
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("[ MAIN SYSTEM ]")
+                        .font(Theme.font(size: 16, weight: .bold))
+                        .foregroundColor(Theme.accent)
+                        .padding(.top, 16)
+                        .padding(.bottom, 8)
+                    
+                    navLabel(title: "SMART SCAN", tag: 0)
+                    navLabel(title: "UNINSTALLER", tag: 1)
+                    navLabel(title: "LOGIN ITEMS", tag: 2)
+                    navLabel(title: "ORPHAN FINDER", tag: 3)
+                    navLabel(title: "MAINTENANCE", tag: 4)
+                    
                     Spacer()
-                    HealthGaugeView(score: healthService.score)
-                        .padding(.trailing, 16)
+                    
+                    TerminalCard(title: "HEALTH") {
+                        HealthGaugeView(score: healthService.score)
+                            .padding(.bottom, 8)
+                    }
+                    .frame(height: 100)
                 }
-                .background(Color(NSColor.windowBackgroundColor))
-
-                Divider()
-
-                // ── Tab Content ─────────────────────────────────────
+                .padding(.horizontal, 16)
+                .frame(width: 220)
+                .background(Theme.surface)
+                
+                // Vertical divider
+                Rectangle()
+                    .fill(Theme.border)
+                    .frame(width: 1)
+                
+                // ── Main Content Area ──────────────────────────────────────
                 Group {
                     if selectedTab == 0 {
                         CleanerView()
@@ -46,20 +63,27 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.background)
             }
-            .frame(minWidth: 540, minHeight: 460)
+            .frame(minWidth: 740, minHeight: 540)
+            .background(Theme.background)
         }
     }
 
-    private func tabLabel(title: String, tag: Int) -> some View {
+    private func navLabel(title: String, tag: Int) -> some View {
         let isSelected = selectedTab == tag
-        return Text(title)
-            .font(.subheadline)
-            .fontWeight(isSelected ? .bold : .regular)
-            .foregroundColor(isSelected ? .accentColor : .secondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
-            .onTapGesture { selectedTab = tag }
+        let color = isSelected ? Theme.accent : Theme.textMuted
+        
+        return HStack {
+            Text(isSelected ? "▶" : " ")
+                .foregroundColor(color)
+            Text(title)
+                .foregroundColor(isSelected ? Theme.textPrimary : Theme.textMuted)
+            Spacer()
+        }
+        .font(Theme.font(size: 14, weight: isSelected ? .bold : .regular))
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .onTapGesture { selectedTab = tag }
     }
 }
