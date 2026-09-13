@@ -100,7 +100,7 @@ import SwiftUI
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 20) {
-            Image("AppIcon") // Or a custom symbol
+            Image(nsImage: NSApplication.shared.applicationIconImage)
                 .resizable()
                 .frame(width: 80, height: 80)
             
