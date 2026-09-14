@@ -40,6 +40,8 @@
 | **Maintenance** (RAM, DNS) | ✅ Готово | **1.2.0** | `purge`, `dscacheutil -flushcache` через `NSAppleScript` |
 | **Health Indicator** (гейдж + уведомления) | ✅ Готово | **1.2.0** | `UNUserNotificationCenter` + `HealthScoreCalculator` |
 | **Редизайн UI (Ретро-терминал)** | ✅ Готово | **1.3.0** | ASCII-стиль, чёрный фон, Sidebar, безопасные GPU-компоненты |
+| **Собственная иконка приложения** | ✅ Готово | **1.3.0** | Скругленный PNG-squircle (macOS HIG) |
+| **Окно "О программе" (AboutView)** | ✅ Готово | **1.3.0** | Отдельное стилизованное окно + иконка |
 
 ---
 
@@ -383,7 +385,9 @@ CaskDatabaseUpdater.downloadAndInstall(etag:):
 
 #### 2. Структурные изменения
 - **Навигация**: `TabView` заменен на кастомную боковую панель (Sidebar) в `ContentView.swift`. Это придает приложению вид классического консольного приложения.
-- **Окно приложения**: Применена настройка `.windowStyle(.hiddenTitleBar)`, которая скрывает стандартную серую полосу заголовка macOS, а кнопки управления окном органично интегрированы в интерфейс.
+- **Окна приложения**: Применена настройка `.windowStyle(.hiddenTitleBar)`, которая скрывает стандартную серую полосу заголовка macOS. Внедрена поддержка ресайза для окна настроек (`.windowResizability(.contentMinSize)`).
+- **Окно "About"**: Создан новый экран `AboutView`, полностью стилизованный под общую эстетику, открываемый через нативное системное меню `AppCommands`.
+- **Иконка приложения**: Создана и внедрена полностью новая ретро-иконка (AppIcon) в формате squircle с прозрачным фоном, которая корректно отображается в Dock и окне About (сгенерированы все размеры от 16x16 до 1024x1024 через скрипт `sips` и `NSBezierPath`).
 
 #### 3. Обновленные экраны
 - **`CleanerView`**: Заменены стандартные индикаторы загрузки на ASCII-стиль (`[ CHECKING... ]`).
@@ -615,7 +619,8 @@ byMakerCleaner/
 │   ├── GeneralSettingsView.swift        — настройки (интервал, Cask, Contribute)
 │   ├── MenuBarPopoverView.swift         — UI с Health и Bluetooth
 │   ├── MaintenanceView.swift            — GPU-safe меню обслуживания
-│   └── HealthGaugeView.swift            — ретро-индикатор здоровья
+│   ├── HealthGaugeView.swift            — ретро-индикатор здоровья
+│   └── AboutView.swift                  — окно О программе
 ├── UI/
 │   ├── Theme.swift                      — глобальные токены стилей терминала
 │   └── TerminalComponents.swift         — GPU-safe кастомные компоненты

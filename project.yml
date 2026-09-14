@@ -12,8 +12,8 @@ targets:
     info:
       path: byMakerCleaner/Info.plist
       properties:
-        CFBundleShortVersionString: 1.1.2
-        CFBundleVersion: 3
+        CFBundleShortVersionString: 1.3.0
+        CFBundleVersion: 5
         NSPrincipalClass: NSApplication
         LSMinimumSystemVersion: 13.0.0
         LSUIElement: false
@@ -23,7 +23,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bymaker.byMakerCleaner
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "" # Set this in Xcode if needed
-        MARKETING_VERSION: 1.2.0
-        CURRENT_PROJECT_VERSION: 4
+        MARKETING_VERSION: 1.3.0
+        CURRENT_PROJECT_VERSION: 5
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: 6.0
